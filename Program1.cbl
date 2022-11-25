@@ -148,6 +148,7 @@
       ********
 
        MenuPrincipal-trt.
+           move 0 to ChoixMenuPrincipal.
            display ecran-menuPrincipal.
            accept ChoixMenuPrincipal line 5 col 75.
            evaluate ChoixMenuPrincipal
