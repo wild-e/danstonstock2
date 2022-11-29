@@ -32,8 +32,8 @@
          10 Jour PIC 99.
 
        01 Article.
-         10 code_article sql char (10).
-         10 id_fournisseur pic x(9).
+         10 code_article pic 9(5).
+         10 id_fournisseur pic 9(9).
          10 libelle sql char-varying (50).
          10 quantite_stock pic 9(5).
          10 quantite_min pic 9(5).
@@ -41,7 +41,7 @@
          10 date_modif sql date.
 
        01 Fournisseur.
-         10 id_fournisseur pic x(9).
+         10 id_fournisseur pic 9(5).
          10 raison_sociale sql char-varying (50).
          10 siret sql char(14).
          10 adresse sql char-varying (50).
@@ -53,22 +53,45 @@
          10 date_modif sql date.
 
        01 AjoutArticleInput.
-         10 id_fournisseur pic x(9).
+         10 id_fournisseur pic 9(5).
          10 libelle sql char-varying (50).
          10 quantite_stock pic 9(5).
          10 quantite_min pic 9(5).
 
        01 ModifArticleInput.
-         10 id_fournisseur pic x(9).
+         10 id_fournisseur pic 9(5).
+         10 raison_sociale sql char-varying (50).
          10 libelle sql char-varying (50).
          10 quantite_stock pic 9(5).
          10 quantite_min pic 9(5).
+
+       01 SuppArticleInput.
+         10 id_fournisseur pic 9(5).
+         10 raison_sociale sql char-varying (50).
+         10 libelle sql char-varying (50).
+         10 quantite_stock pic 9(5).
+         10 quantite_min pic 9(5).
+
+       01 ArticleRecupere.
+         10 code_article pic 9(5).
+         10 id_fournisseur pic 9(5).
+         10 libelle sql char-varying (50).
+         10 quantite_stock pic 9(5).
+         10 quantite_min pic 9(5).
+         10 date_crea sql date.
+         10 date_modif sql date.
+         10 raison_sociale sql char-varying (50).
+         10 ReqSql1 pic x(5).
+         10 ReqSql2 pic x(2) value "%'".
+         10 ReqSql3 pic x(7).
 
        01 EcranArticleInput.
            10 Ecran-QuantiteStock pic X(5).
            10 Ecran-QuantiteMin pic X(5).
            10 FournisseurChoisi pic X(50).
 
+       77 LibelleArticleRecherche pic X(50).
+       77 VerifFournisseurPresent pic 9.
        77 NoLigneArticle pic 99.
        77 NoLigneFournisseur pic 99.
        77 NoLigneChoixFournisseur pic 99.
@@ -78,6 +101,8 @@
        77 EOF pic 9.
        77 EOCF pic 9.
        77 EOA pic 9.
+       77 EOM pic 9.
+       77 EOSUP pic 9.
        77 essai pic x(50).
 
       ************************************************************
@@ -128,7 +153,7 @@
        01 ListeArticle-E background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "LISTE DES ARTICLES".
-         10 line 5 col 1 reverse-video pic X(80) VALUE " Code Art     Libelle              Stock   Stock Min   Date".
+         10 line 5 col 1 reverse-video pic X(80) VALUE " Code Art     Libelle              Stock   Stock Min   Création         Modifier".
 
        01 LigneArticle.
          05 line NoLigneArticle Col 3 from code_article of Article.
@@ -136,6 +161,7 @@
          05 line NoLigneArticle Col 36 pic 9(5) from quantite_stock of Article.
          05 line NoLigneArticle Col 44 pic 9(5) from quantite_min of Article.
          05 line NoLigneArticle Col 57 pic X(10) from date_crea of Article.
+         05 line NoLigneArticle Col 70 pic X(10) from date_modif of Article.
 
       ********** AJOUT ARTICLE *****
 
@@ -150,19 +176,6 @@
            10 line 8 col 31 using Ecran-QuantiteMin.
            10 line 9 col 15 value "Fournisseur : ".
            10 line 9 col 29 using ChoixFournisseur.
-
-           01 ecran-ModifArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
-           10 line 1 col 1 blank screen.
-           10 line 3 col 32 value "MODIFIER UN ARTICLE".
-           10 line 6 col 15 value "Libelle : ".
-           10 line 6 col 25 using libelle of AjoutArticleInput.
-           10 line 7 col 15 value "Stock : ".
-           10 line 7 col 23 using Ecran-QuantiteStock.
-           10 line 8 col 15 value "Stock minimal : ".
-           10 line 8 col 31 using Ecran-QuantiteMin.
-           10 line 9 col 15 value "Fournisseur : ".
-           10 line 9 col 29 using ChoixFournisseur.
-           10 line 11 col 1 reverse-video pic X(80) VALUE " Ref     Nom".
 
        01 ChoixAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
            10 line 5 col 20 value "[A] jouter - [R] evenir : ".
@@ -180,6 +193,38 @@
        01 LigneChoixFournisseur.
          05 line NoLigneChoixFournisseur Col 3 from id_fournisseur of Fournisseur.
          05 line NoLigneChoixFournisseur Col 15 pic X(20) from raison_sociale of Fournisseur.
+      *************************************************************
+      *   MODIFICATION ARTICLE
+      *************************************************************
+       
+       01 ecran-ModifArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "MODIFIER UN ARTICLE".
+         10 line 6 col 15 value "Libelle : ".
+         10 line 6 col 25 using libelle of ModifArticleInput.
+         10 line 7 col 15 value "Stock : ".
+         10 line 7 col 23 using quantite_stock of ModifArticleInput.
+         10 line 8 col 15 value "Stock minimal : ".
+         10 line 8 col 31 using quantite_min of ModifArticleInput.
+         10 line 9 col 15 value "Fournisseur : ".
+         10 line 9 col 29 using raison_sociale of ModifArticleInput.
+
+      *************************************************************
+      *   SUPPRESSION ARTICLE
+      *************************************************************
+       
+       01 ecran-SuppArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "SUPPRIMER UN ARTICLE".
+         10 line 6 col 15 value "Libelle : ".
+         10 line 6 col 25 using libelle of SuppArticleInput.
+         10 line 7 col 15 value "Stock : ".
+         10 line 7 col 23 using quantite_stock of SuppArticleInput.
+         10 line 8 col 15 value "Stock minimal : ".
+         10 line 8 col 31 using quantite_min of SuppArticleInput.
+         10 line 9 col 15 value "Fournisseur : ".
+         10 line 9 col 29 using raison_sociale of SuppArticleInput.
+
        procedure division.
 
       *************************************************************
@@ -248,6 +293,10 @@
                    perform ListeArticle
                when 2
                    perform AjoutArticle
+               when 3
+                   perform ModifArticle
+               when 4
+                   perform SuppArticle
 
            end-evaluate.
        MenuArticle-fin.
@@ -363,6 +412,82 @@
        AjoutArticle-fin.
            continue.
 
+       ModifArticle.
+           perform ModifArticle-init
+           perform ModifArticle-trt until EOM = 1.
+           perform ModifArticle-fin.
+
+       ModifArticle-init.
+           move 0 to EOM.
+           exec sql
+           declare C-ModifArticle cursor for
+               select code_article,id_fournisseur, libelle, quantite_stock, quantite_min, date_crea, date_modif, raison_sociale from ArticleFournisseur
+                      Order by libelle
+           end-exec.
+
+           exec sql
+               open C-ModifArticle
+           End-exec.
+       ModifArticle-trt.
+           move 1 to EOM.
+           initialize ModifArticleInput.
+           display ecran-ModifArticle.
+           accept libelle of ModifArticleInput line 6 col 25.
+      *    string "'" libelle of ModifArticleInput into ReqSql1.
+      *    string ReqSql1 ReqSql2 into ReqSql3.
+
+           move libelle of ModifArticleInput to LibelleArticleRecherche.
+           perform RechercheArticle.
+           initialize LibelleArticleRecherche.
+          
+           move libelle of ArticleRecupere to libelle of ModifArticleInput.
+           move quantite_stock of ArticleRecupere to quantite_stock of ModifArticleInput.
+           move quantite_min of ArticleRecupere to quantite_min of ModifArticleInput.
+           move raison_sociale of ArticleRecupere to raison_sociale of ModifArticleInput.
+
+           display code_article of ArticleRecupere.
+           display ecran-ModifArticle.
+
+           accept libelle of ModifArticleInput line 6 col 25 with update.
+           accept quantite_stock of ModifArticleInput line 7 col 23.
+           accept quantite_min of ModifArticleInput line 8 col 31.
+
+           accept raison_sociale of ModifArticleInput line 9 col 29.
+
+           if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere
+               exec sql
+                 SELECT COUNT(*) INTO :VerifFournisseurPresent
+                 FROM Fournisseur
+                 WHERE raison_social = :ModifArticleInput.raison_sociale
+               end-exec
+               display VerifFournisseurPresent line 6 col 25 reverse-video
+               accept Pause
+           end-if.
+               exec sql
+                   UPDATE article
+                   SET libelle = :ModifArticleInput.libelle,
+                       id_fournisseur = :ArticleRecupere.id_fournisseur,
+                       quantite_stock = :ModifArticleInput.quantite_stock,
+                       quantite_min = :ModifArticleInput.quantite_min,
+                       date_modif = getdate()
+                   WHERE
+                       code_article = :ArticleRecupere.code_article
+               end-exec.
+       ModifArticle-fin.
+           continue.
+
+       SuppArticle.
+           perform SuppArticle-init
+           perform SuppArticle-trt until EOSUP = 1.
+           perform SuppArticle-fin.
+       SuppArticle-init.
+           move 0 to EOSUP.
+       SuppArticle-trt.
+           move 1 to EOSUP.
+           display ecran-SuppArticle.
+           accept libelle of SuppArticleInput line 6 col 25.
+       SuppArticle-fin.
+           continue.
        ChoixDuFournisseur.
            perform ChoixFournisseur-init.
            perform ChoixFournisseur-trt until EOCF = 1.
@@ -415,7 +540,18 @@
                    move 7 to NoLigneChoixFournisseur
                end-if
            end-if.
-
-
+      **********************************************************
+      *   Recherche un article dans la BDD par son libellé     *
+      *                                                        *
+      *   Renseigner LibelleArticleRecherche avec le libellé   *
+      **********************************************************
+       RechercheArticle.
+           exec sql
+              SELECT code_article,id_fournisseur, libelle, quantite_stock, quantite_min, date_crea, date_modif, raison_sociale
+                           INTO :ArticleRecupere.code_article, :ArticleRecupere.id_fournisseur, :ArticleRecupere.libelle, :ArticleRecupere.quantite_stock,
+                                :ArticleRecupere.quantite_min, :ArticleRecupere.date_crea, :ArticleRecupere.date_modif, :ArticleRecupere.raison_sociale
+              FROM ArticleFournisseur
+              WHERE libelle = :LibelleArticleRecherche
+          end-exec.
 
        end program Program1.
