@@ -25,6 +25,7 @@
        77 ChoixFournisseur PIC X(30) value "Afficher liste fournisseur".
        77 ChoixEcranFournisseur PIC 9 value 0.
        77 ChoixAjoutArticle pic x.
+       77 ChoixSupprimerArticle pic x.
 
        01 DateSysteme.
          10 Annee PIC 9999.
@@ -224,6 +225,19 @@
          10 line 8 col 31 using quantite_min of SuppArticleInput.
          10 line 9 col 15 value "Fournisseur : ".
          10 line 9 col 29 using raison_sociale of SuppArticleInput.
+
+       01 Ligne-DemandeSuppression background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : ".
+
+       01 Ligne-AlerteStock background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Le stock doit etre a zero pour supprimer un article.".
+
+       01 Ligne-ArticleSupprime background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 15 value "L article a bien ete supprime.".
+
+
+       01 EffaceLigne5 background-color is CouleurFondEcran.
+         10 line 5 col 1 pic X(80).
 
        procedure division.
 
@@ -430,6 +444,7 @@
            End-exec.
        ModifArticle-trt.
            move 1 to EOM.
+           initialize ArticleRecupere.
            initialize ModifArticleInput.
            display ecran-ModifArticle.
            accept libelle of ModifArticleInput line 6 col 25.
@@ -445,7 +460,6 @@
            move quantite_min of ArticleRecupere to quantite_min of ModifArticleInput.
            move raison_sociale of ArticleRecupere to raison_sociale of ModifArticleInput.
 
-           display code_article of ArticleRecupere.
            display ecran-ModifArticle.
 
            accept libelle of ModifArticleInput line 6 col 25 with update.
@@ -474,7 +488,8 @@
                        code_article = :ArticleRecupere.code_article
                end-exec.
        ModifArticle-fin.
-           continue.
+           initialize ArticleRecupere.
+           initialize ModifArticleInput.
 
        SuppArticle.
            perform SuppArticle-init
@@ -483,11 +498,50 @@
        SuppArticle-init.
            move 0 to EOSUP.
        SuppArticle-trt.
+           initialize ArticleRecupere.
+           initialize SuppArticleInput.
            move 1 to EOSUP.
            display ecran-SuppArticle.
            accept libelle of SuppArticleInput line 6 col 25.
+
+           move libelle of SuppArticleInput to LibelleArticleRecherche.
+           perform RechercheArticle.
+           initialize LibelleArticleRecherche.
+
+           move libelle of ArticleRecupere to libelle of SuppArticleInput.
+           move quantite_stock of ArticleRecupere to quantite_stock of SuppArticleInput.
+           move quantite_min of ArticleRecupere to quantite_min of SuppArticleInput.
+           move raison_sociale of ArticleRecupere to raison_sociale of SuppArticleInput.
+
+           display ecran-SuppArticle.
+
+           move "O" to ChoixSupprimerArticle.
+           display Ligne-DemandeSuppression.
+           accept ChoixSupprimerArticle line 5 col 63.
+
+           if ChoixSupprimerArticle = "O" or ChoixSupprimerArticle = "o"
+               if quantite_stock of ArticleRecupere equal 0
+                   exec sql
+                     DELETE FROM Article
+                     WHERE code_article = :ArticleRecupere.code_article
+                   end-exec
+                   initialize ArticleRecupere
+                   initialize SuppArticleInput
+                   display ecran-SuppArticle
+                   display EffaceLigne5
+                   display Ligne-ArticleSupprime
+                   accept Pause line 1 col 1
+               else
+                   display Ligne-AlerteStock
+                   accept Pause line 1 col 1
+               end-if
+           else
+               move 0 to EOSUP
+           end-if.
+
+
        SuppArticle-fin.
-           continue.
+           initialize ArticleRecupere.
        ChoixDuFournisseur.
            perform ChoixFournisseur-init.
            perform ChoixFournisseur-trt until EOCF = 1.
