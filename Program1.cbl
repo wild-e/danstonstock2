@@ -88,7 +88,6 @@
 
        77 CodeFournisseur pic x(9).
        77 QuantiteTotalCommande pic 9(6).
-       77 NoLigneArticle pic 9(10).
        77 NoLigneCommande pic 9(10).
        77 TotalLigneCommande pic 9(10).
        77 Choix pic x.
@@ -123,7 +122,6 @@
 
        01 MessageErreurCommande pic x(80).
        77 EOCF pic 9.
-       77 EOA pic 9.
        77 essai pic x(50).
 
       ************************************************************
