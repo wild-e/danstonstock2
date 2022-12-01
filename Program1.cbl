@@ -13,6 +13,8 @@
            select f-fichierCommande4 assign to "E:\Emma\DUGS\fichierCommande4.csv"
            organization is line sequential.
 
+           select f-fichierEtatStock assign to "E:\Emma\DUGS\fichierEtatStock.txt"
+           organization is line sequential.
 
 
        data division.
@@ -26,6 +28,9 @@
        01 e-fichierCommande3 pic x(255).
        fd f-fichierCommande4 record varying from 0 to 255.
        01 e-fichierCommande4 pic x(255).
+
+       fd f-fichierEtatStock record varying from 0 to 255.
+       01 e-fichierEtatStock pic x(255).
 
        working-storage section.
 
@@ -120,9 +125,71 @@
        77 EOA pic 9.
        77 tally-counter pic 9.
 
-       01 MessageErreurCommande pic x(80).
+       77 MessageErreurCommande pic x(80).
        77 EOCF pic 9.
        77 essai pic x(50).
+       77 noPageEtatStock pic 999.
+       77 nbLigneEtatStock pic 99.
+       77 MaxLigneEtatStock PIC 99 VALUE 33.
+
+      *    Variable génération état de stock
+
+       01 CorpsFichierEtatStock.
+         10 FILLER PIC X.
+         10 code_article PIC 9(10).
+         10 FILLER PIC X(8).
+         10 libelle PIC X(50).
+         10 FILLER PIC X(5).
+         10 quantite_stock PIC 9(5).
+         10 FILLER PIC X(15).
+         10 quantite_min PIC 9(5).
+
+       01 EnteteFichierEtatStock.
+         05 ligne1.
+           10 FILLER PIC X(48).
+           10 FILLER PIC X(15) VALUE "Etat des stocks".
+         05 Ligne2 PIC X.
+         05 ligne3.
+           10 FILLER PIC X.
+           10 FILLER PIC X(13) VALUE "Commande :".
+           10 FILLER PIC X.
+           10 no_commande PIC x(10).
+           10 FILLER PIC X(65).
+           10 FILLER PIC X(6) VALUE "Date :".
+           10 FILLER PIC X.
+           10 jour PIC X(2).
+           10 FILLER PIC X VALUE "/".
+           10 mois PIC X(2).
+           10 FILLER PIC X VALUE "/".
+           10 annee PIC X(4).
+         05 Ligne4 PIC X(111) VALUE ALL "-".
+         05 Ligne5.
+           10 FILLER PIC X.
+           10 FILLER PIC X(12) VALUE "Code article".
+           10 FILLER PIC X(4).
+           10 FILLER PIC X(7) VALUE "Libelle".
+           10 FILLER PIC X(45).
+           10 FILLER PIC X(14) VALUE "Quantite stock".
+           10 FILLER PIC X(10).
+           10 FILLER PIC X(14) VALUE "Quantite min".
+         05 Ligne6 PIC X(111) VALUE ALL "-".
+
+       01 PiedDePageFichierEtatStock.
+         10 FILLER PIC X(4) VALUE ALL "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(4) VALUE "Page".
+         10 FILLER PIC X.
+         10 NbPage PIC Z9.
+         10 FILLER PIC X.
+         10 FILLER PIC X(98) VALUE ALL "-".
+
+       01 FinPiedDePageFichierEtatStock.
+         10 FILLER PIC X(4) VALUE ALL "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(14) VALUE "Fin traitement".
+         10 FILLER PIC X.
+         10 FILLER PIC X(91) VALUE ALL "-".
+
 
       ************************************************************
       * Paramétrage couleur écran
@@ -692,6 +759,12 @@
        VerificationFichier-fin.
            perform CloseInput.
 
+      *************************************************************
+      *************************************************************
+      * Génération fichier état stock
+      *************************************************************
+      *************************************************************
+
        TraitementCommande.
            perform TraitementCommande-init.
            perform TraitementCommande-trt until NoligneCommande = TotalLigneCommande.
@@ -717,6 +790,23 @@
                SELECT scope_identity() into :Commande.no_commande
            end-exec.
 
+      *    Init génération de l'etat de stock
+           move 0 to noPageEtatStock.
+           move 0 to nbLigneEtatStock.
+           open output f-fichierEtatStock.
+
+      *    Ecriture entête
+           move jour of DateSysteme to jour of ligne3.
+           move mois of DateSysteme to mois of ligne3.
+           move Annee of DateSysteme to annee of ligne3.
+           move no_commande of commande to no_commande of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne1 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne2 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne3 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne4 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne5 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne6 of EnteteFichierEtatStock.
+
        TraitementCommande-trt.
            perform ReadFichier.
            perform unstringEnregistrementCommande.
@@ -725,11 +815,13 @@
                select
                    code_article,
                    quantite_stock,
-                   quantite_min
+                   quantite_min,
+                   libelle
                    into
                    :article.code_article,
                    :article.quantite_stock,
-                   :article.quantite_min
+                   :article.quantite_min,
+                   :article.libelle
                    from article
                    WHERE code_article = :commande.code_article AND id_fournisseur = :CodeFournisseur
            end-exec.
@@ -751,11 +843,34 @@
                        )
            end-exec.
            add 1 to NoLigneCommande.
+
+      *    Ecriture etat stock
+           move code_article of article to code_article of CorpsFichierEtatStock.
+           move libelle of article to libelle of CorpsFichierEtatStock.
+           move quantite_stock of article to quantite_stock of CorpsFichierEtatStock.
+           move quantite_min of article to quantite_min of CorpsFichierEtatStock.
+
+           write e-fichierEtatStock from CorpsFichierEtatStock.
+           add 1 to nbLigneEtatStock.
+
+      *    ecriture pied de page nouvelle page
+           if nbLigneEtatStock equal MaxLigneEtatStock
+               add 1 to noPageEtatStock
+               move noPageEtatStock to NbPage of PiedDePageFichierEtatStock
+               write e-fichierEtatStock from PiedDePageFichierEtatStock
+               move 0 to nbLigneEtatStock
+           end-if.
+
+
        TraitementCommande-fin.
            perform CloseInput.
+
+           write e-fichierEtatStock from FinPiedDePageFichierEtatStock
+           close f-fichierEtatStock.
+
            display ligne-MenuCommandeSucces.
            accept ChoixNoCommande line 5 col 77.
-           
+
            
       *************************************************************
       *************************************************************
