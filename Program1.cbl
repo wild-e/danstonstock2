@@ -15,6 +15,9 @@
 
            select f-fichierEtatStock assign to "E:\Emma\DUGS\fichierEtatStock.txt"
            organization is line sequential.
+           select f-fichierCommandeStockBas assign to "E:\Emma\DUGS\fichierCommandeStockBas.txt"
+           organization is line sequential.
+
 
 
        data division.
@@ -31,6 +34,9 @@
 
        fd f-fichierEtatStock record varying from 0 to 255.
        01 e-fichierEtatStock pic x(255).
+       fd f-fichierCommandeStockBas record varying from 0 to 255.
+       01 e-fichierCommandeStockBas pic x(255).
+
 
        working-storage section.
 
@@ -59,11 +65,7 @@
        77 ChoixAjoutArticle pic x.
        77 ChoixSupprimerArticle pic x.
        77 ChoixEcranArticle PIC 99 value 0.
-
        77 ChoixMenuFournisseur PIC X.
-       77 ChoixFournisseur PIC X(30) value "Afficher liste fournisseur".
-       77 ChoixEcranFournisseur PIC 99 value 0.
-
 
        01 DateSysteme.
          10 Annee PIC 9999.
@@ -152,28 +154,31 @@
        77 NoLigneChoixArticle pic 99.
        77 NoLigneChoixFournisseur pic 99.
 
-       77 Response pic x.
-
+       77 ReponseListeArticle pic x.
        77 ResponseChoixArticle pic x.
        77 ResponseChoixFournisseur pic x.
+       77 Pause pic x.
 
        77 EOF pic 9.
        77 EOCA pic 9.
        77 EOR pic 9.
        77 EOA pic 9.
+       77 EOCS pic 9.
        77 tally-counter pic 9.
 
        77 MessageErreurCommande pic x(80).
        77 EOCF pic 9.
-       77 EOA pic 9.
        77 EOM pic 9.
        77 EOSUP pic 9.
-       77 essai pic x(50).
        77 noPageEtatStock pic 999.
        77 nbLigneEtatStock pic 99.
        77 MaxLigneEtatStock PIC 99 VALUE 33.
+       77 noPageReapprovisionnement pic 999.
+       77 nbLigneReapprovisionnement pic 99.
+       77 MaxLigneReapprovisionnement PIC 99 VALUE 33.
 
-      *    Variable génération état de stock
+
+      *    Variables génération état de stock
 
        01 CorpsFichierEtatStock.
          10 FILLER PIC X.
@@ -225,6 +230,66 @@
          10 FILLER PIC X(98) VALUE ALL "-".
 
        01 FinPiedDePageFichierEtatStock.
+         10 FILLER PIC X(4) VALUE ALL "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(14) VALUE "Fin traitement".
+         10 FILLER PIC X.
+         10 FILLER PIC X(91) VALUE ALL "-".
+
+      *  Variable génération commande réapprovisionnement
+
+       01 EnteteFichierReapprovisionnementStock.
+         05 ligne1.
+           10 FILLER PIC X.
+           10 raison_sociale PIC X(50).
+         05 ligne2.
+           10 FILLER PIC X.
+           10 adresse PIC X(80).
+         05 ligne3.
+           10 FILLER PIC X.
+           10 cp PIC X(5).
+           10 FILLER PIC X.
+           10 ville PIC X(50).
+         05 ligne4.
+           10 FILLER PIC X.
+           10 FILLER PIC X(19) VALUE "Réapprovisionnement".
+         05 Ligne5 PIC X.
+         05 Ligne6.
+           10 filler pic x(95).
+           10 jour PIC X(2).
+           10 FILLER PIC X VALUE "/".
+           10 mois PIC X(2).
+           10 FILLER PIC X VALUE "/".
+           10 annee PIC X(4).
+         05 Ligne7 PIC X.
+         05 Ligne8 PIC X(111) VALUE ALL "-".
+         05 Ligne9.
+           10 FILLER PIC X.
+           10 FILLER PIC X(9) VALUE "Référence".
+           10 FILLER PIC X(4).
+           10 FILLER PIC X(11) VALUE "Désignation".
+           10 FILLER PIC X(45).
+           10 FILLER PIC X(9) VALUE "Quantités".
+         05 Ligne10 PIC X(111) VALUE ALL "-".
+
+       01 CorpsFichierReapprovisionnementStock.
+         10 FILLER PIC X.
+         10 code_article PIC 9(10).
+         10 FILLER PIC X(8).
+         10 libelle PIC X(50).
+         10 FILLER PIC X(5).
+         10 quantiteAReapprovisionner PIC 9(5).
+
+       01 PiedDePageFichierReapprovisionnementStock.
+         10 FILLER PIC X(4) VALUE ALL "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(4) VALUE "Page".
+         10 FILLER PIC X.
+         10 NbPage PIC Z9.
+         10 FILLER PIC X.
+         10 FILLER PIC X(98) VALUE ALL "-".
+
+       01 FinPiedDePageFichierReapprovisionnementStock.
          10 FILLER PIC X(4) VALUE ALL "-".
          10 FILLER PIC X.
          10 FILLER PIC X(14) VALUE "Fin traitement".
@@ -504,6 +569,8 @@
                    perform ModifArticle
                when 4
                    perform SuppArticle
+               when 5
+                   perform ComparaisonStock
 
            end-evaluate.
        MenuArticle-fin.
@@ -517,7 +584,7 @@
        ListeArticle-init.
            move 0 to EOF.
 
-      * D�claration du curseur
+      * Déclaration du curseur
            exec sql
                declare C-ListeArticle cursor for
                    select code_article,id_fournisseur, libelle, quantite_stock, quantite_min, date_crea, date_modif from Article
@@ -547,7 +614,7 @@
 
                move 1 to EOF
                display " Fin de la liste. Tapez entrer " line 5 col 10
-               accept Response
+               accept ReponseListeArticle
 
            else
                perform AffichageListeArticle
@@ -564,10 +631,10 @@
 
            if NoLigneArticle equal 23
                Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
-               Move "S" to response
-               accept response line 1 col 29
+               Move "S" to ReponseListeArticle
+               accept ReponseListeArticle line 1 col 29
 
-               if response = "M" or response = "m"
+               if ReponseListeArticle = "M" or ReponseListeArticle = "m"
                    move 1 to EOF
                else
                    move 5 to NoLigneArticle
@@ -780,6 +847,94 @@
        SuppArticle-fin.
            initialize ArticleRecupere.
 
+      *************************************************************
+      *************************************************************
+      * Comparaison stock article
+      *************************************************************
+      *************************************************************
+
+       ComparaisonStock.
+           perform ComparaisonStock-init.
+           perform ComparaisonStock-trt until EOCS = 1.
+           perform ComparaisonStock-fin.
+
+       ComparaisonStock-init.
+           move 0 to EOCS.
+           move spaces to article.
+           move spaces to Commande.
+           move 0 to noPageReapprovisionnement.
+           move 0 to nbLigneReapprovisionnement.
+           exec sql
+               declare C-ComparaisonStock cursor for
+                   select code_article, libelle, quantite_stock, quantite_min, id_fournisseur from Article
+                   where quantite_stock <= quantite_min
+                   order by id_fournisseur
+           end-exec.
+           exec sql
+             open C-ComparaisonStock
+           end-exec.
+
+       ComparaisonStock-trt.
+           exec sql
+               fetch C-ComparaisonStock into
+               :Article.code_article,
+               :Article.libelle,
+               :Article.quantite_stock,
+               :Article.quantite_min,
+               :Commande.code_fournisseur
+           end-exec.
+           if (sqlcode not equal 0 and sqlcode not equal 1) then
+               move 1 to EOCS
+           end-if.
+           perform EcritureFichierReapprovisionnement.
+
+       ComparaisonStock-fin.
+           continue.
+
+      *************************************************************
+      *************************************************************
+      * Ecriture fichier Réapprovisionnement
+      *************************************************************
+      *************************************************************
+
+       EcritureFichierReapprovisionnement.
+           if nbLigneReapprovisionnement equal 1
+               perform EcritureFichierReapprovisionnement-init
+           end-if.
+           perform EcritureFichierReapprovisionnement-trt.
+           if EOCS equal 1
+               perform EcritureFichierReapprovisionnement-fin
+           end-if.
+
+
+       EcritureFichierReapprovisionnement-init.
+           move jour of DateSysteme to jour of EnteteFichierReapprovisionnementStock.
+           move mois of DateSysteme to mois of EnteteFichierReapprovisionnementStock.
+           move annee of DateSysteme to annee of EnteteFichierReapprovisionnementStock.
+           move raison_sociale of Fournisseur to raison_sociale of EnteteFichierReapprovisionnementStock.
+           move adresse of Fournisseur to adresse of EnteteFichierReapprovisionnementStock.
+           move cp of Fournisseur to cp of EnteteFichierReapprovisionnementStock.
+           move ville of Fournisseur to ville of EnteteFichierReapprovisionnementStock.
+           add 1 to nbLigneReapprovisionnement.
+
+           write e-fichierEtatStock from ligne1 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne2 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne3 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne4 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne5 of EnteteFichierEtatStock.
+           write e-fichierEtatStock from ligne6 of EnteteFichierEtatStock.
+
+       EcritureFichierReapprovisionnement-trt.
+
+       EcritureFichierReapprovisionnement-fin.
+
+
+      *************************************************************
+      *************************************************************
+      * Menu fournisseur
+      *************************************************************
+      *************************************************************
+
        MenuFournisseur.
            perform MenuFournisseur-init.
            perform MenuFournisseur-trt until ChoixMenuFournisseur = 0.
@@ -852,12 +1007,14 @@
                else
                    move 7 to NoLigneChoixArticle
                end-if
+           end-if.
 
       *************************************************************
       *************************************************************
       * Gestion menu commande
       *************************************************************
       *************************************************************
+
        MenuCommande.
            perform MenuCommande-init.
            perform MenuCommande-trt until ChoixMenuCommande equal 0.
@@ -1231,7 +1388,6 @@
       *************************************************************
       *************************************************************
            
-           end-if.
        ChoixDuFournisseur.
            perform ChoixFournisseur-init.
            perform ChoixFournisseur-trt until EOCF = 1.
