@@ -140,8 +140,8 @@
          10 ReqSql3 pic x(7).
 
        01 EcranArticleInput.
-           10 Ecran-QuantiteStock pic X(5).
-           10 Ecran-QuantiteMin pic X(5).
+           10 Ecran-QuantiteStock pic 9(5).
+           10 Ecran-QuantiteMin pic 9(5).
            10 FournisseurChoisi pic X(50).
 
        77 LibelleArticleRecherche pic X(50).
@@ -405,9 +405,9 @@
            10 line 6 col 15 value "Libelle : ".
            10 line 6 col 25 using libelle of AjoutArticleInput.
            10 line 7 col 15 value "Stock : ".
-           10 line 7 col 23 using Ecran-QuantiteStock.
+           10 line 7 col 23 pic ZZZ99 using Ecran-QuantiteStock blank when zero.
            10 line 8 col 15 value "Stock minimal : ".
-           10 line 8 col 31 using Ecran-QuantiteMin.
+           10 line 8 col 31 pic ZZZ99 using Ecran-QuantiteMin blank when zero.
            10 line 9 col 15 value "Fournisseur : ".
            10 line 9 col 29 using ChoixFournisseur lowlight just right.
 
@@ -517,7 +517,7 @@
 
            if (sqlcode not equal 0)
              then
-               display "Erreur connexion base de donn�e" line 4 col 15
+               display "Erreur connexion base de donne    bn            e" line 4 col 15
                stop run
            end-if.
 
