@@ -911,10 +911,10 @@
            move jour of DateSysteme to jour of EnteteFichierReapprovisionnementStock.
            move mois of DateSysteme to mois of EnteteFichierReapprovisionnementStock.
            move annee of DateSysteme to annee of EnteteFichierReapprovisionnementStock.
-           raison_sociale of EnteteFichierReapprovisionnementStock.
-           adresse of EnteteFichierReapprovisionnementStock.
-           cp of EnteteFichierReapprovisionnementStock.
-           ville of EnteteFichierReapprovisionnementStock.
+           move raison_sociale of Fournisseur to raison_sociale of EnteteFichierReapprovisionnementStock.
+           move adresse of Fournisseur to adresse of EnteteFichierReapprovisionnementStock.
+           move cp of Fournisseur to cp of EnteteFichierReapprovisionnementStock.
+           move ville of Fournisseur to ville of EnteteFichierReapprovisionnementStock.
            add 1 to nbLigneReapprovisionnement.
 
            write e-fichierEtatStock from ligne1 of EnteteFichierEtatStock.
