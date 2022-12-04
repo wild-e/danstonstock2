@@ -135,9 +135,27 @@
          10 date_crea sql date.
          10 date_modif sql date.
          10 raison_sociale sql char-varying (50).
-         10 ReqSql1 pic x(5).
-         10 ReqSql2 pic x(2) value "%'".
-         10 ReqSql3 pic x(7).
+
+       01 ArticleDateCreationAffichage.
+         10 Annee pic 9999.
+         10 filler value "/".
+         10 Mois pic 99.
+         10 filler value "/".
+         10 Jour pic 99.
+
+       01 ArticleDateModifAffichage.
+         10 Annee pic 9999.
+         10 filler value "/".
+         10 Mois pic 99.
+         10 filler value "/".
+         10 Jour pic 99.
+
+      *01 ArticleDateCreationAffichage.
+      *  10 Jour pic 99.
+      *  10 filler value "/".
+      *  10 Mois pic 99.
+      *  10 filler value "/".
+      *  10 Annee pic 9999.
 
        01 EcranArticleInput.
            10 Ecran-QuantiteStock pic 9(5).
@@ -387,15 +405,23 @@
        01 ListeArticle-E background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "LISTE DES ARTICLES".
-         10 line 5 col 1 reverse-video pic X(80) VALUE " Code Art     Libelle              Stock   Stock Min   Cr�ation         Modifier".
+         10 line 5 col 1 reverse-video pic X(80) VALUE " Code Art     Libelle              Stock   Stock Min   Creation         Modifier".
 
        01 LigneArticle.
          05 line NoLigneArticle Col 3 from code_article of Article.
          05 line NoLigneArticle Col 15 pic X(20) from Libelle of Article.
          05 line NoLigneArticle Col 36 pic 9(5) from quantite_stock of Article.
          05 line NoLigneArticle Col 44 pic 9(5) from quantite_min of Article.
-         05 line NoLigneArticle Col 57 pic X(10) from date_crea of Article.
-         05 line NoLigneArticle Col 70 pic X(10) from date_modif of Article.
+         05 line NoLigneArticle Col 57 pic XX from Jour of ArticleDateCreationAffichage.
+         05 line NoLigneArticle Col 59 pic X value "/".
+         05 line NoLigneArticle Col 60 pic XX from Mois of ArticleDateCreationAffichage.
+         05 line NoLigneArticle Col 62 pic X value "/".
+         05 line NoLigneArticle Col 63 pic XXXX from Annee of ArticleDateCreationAffichage.
+         05 line NoLigneArticle Col 70 pic XX from Jour of ArticleDateModifAffichage.
+         05 line NoLigneArticle Col 72 pic X value "/".
+         05 line NoLigneArticle Col 73 pic XX from Mois of ArticleDateModifAffichage.
+         05 line NoLigneArticle Col 75 pic X value "/".
+         05 line NoLigneArticle Col 76 pic XXXX from Annee of ArticleDateModifAffichage.
 
       ********** AJOUT ARTICLE *****
 
@@ -426,7 +452,7 @@
 
        01 ecran-ChoixArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
            10 line 1 col 1 blank screen.
-           10 line 3 col 32 value "CHOIX DU ARTICLE".
+           10 line 3 col 32 value "CHOIX DE L ARTICLE".
            10 line 5 col 68 value "Choix :".
            10 line 5 col 77 pic 9 from ChoixEcranArticle.
            10 line 7 col 1 reverse-video pic X(80) VALUE " Ref     Nom".
@@ -471,13 +497,13 @@
          10 line 9 col 29 using raison_sociale of SuppArticleInput.
 
        01 Ligne-DemandeSuppression background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : " blink.
+         10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : ".
 
        01 Ligne-AlerteStock background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 10 value "Le stock doit etre a zero pour supprimer un article." blink.
+         10 line 5 col 10 value "Le stock doit etre a zero pour supprimer un article.".
 
        01 Ligne-AlerteArticlePresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 10 value "Cet article est deja present en base de donnee." blink.
+         10 line 5 col 10 value "Cet article est deja present en base de donnee.".
 
        01 Ligne-AnnulationAjoutArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 15 value "L article n a pas ete ajoute.".
@@ -610,10 +636,13 @@
                                          :Article.date_crea,
                                          :Article.date_modif
            end-exec.
+
+           move date_crea of Article to ArticleDateCreationAffichage.
+           move date_crea of Article to ArticleDateModifAffichage.
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOF
-               display " Fin de la liste. Tapez entrer " line 5 col 10
+               display " Fin de la liste. Tapez entrer " line 1 col 1
                accept ReponseListeArticle
 
            else
@@ -755,8 +784,6 @@
                perform RechercheArticleParNom
                initialize LibelleArticleRecherche
            end-if.
-      *    string "'" libelle of ModifArticleInput into ReqSql1.
-      *    string ReqSql1 ReqSql2 into ReqSql3.
 
           
            move libelle of ArticleRecupere to libelle of ModifArticleInput.
