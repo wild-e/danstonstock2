@@ -149,13 +149,20 @@
          10 Mois pic 99.
          10 filler value "/".
          10 Jour pic 99.
+       
+       01 FournisseurDateCreationAffichage.
+         10 Annee pic 9999.
+         10 filler value "/".
+         10 Mois pic 99.
+         10 filler value "/".
+         10 Jour pic 99.
 
-      *01 ArticleDateCreationAffichage.
-      *  10 Jour pic 99.
-      *  10 filler value "/".
-      *  10 Mois pic 99.
-      *  10 filler value "/".
-      *  10 Annee pic 9999.
+       01 FournisseurDateModifAffichage.
+         10 Annee pic 9999.
+         10 filler value "/".
+         10 Mois pic 99.
+         10 filler value "/".
+         10 Jour pic 99.
 
        01 EcranArticleInput.
            10 Ecran-QuantiteStock pic 9(5).
@@ -172,12 +179,16 @@
        77 NoLigneChoixArticle pic 99.
        77 NoLigneChoixFournisseur pic 99.
 
+       77 NoLigneFournisseur pic 99.
+
        77 ReponseListeArticle pic x.
+       77 ReponseListeFournisseur pic x.
        77 ResponseChoixArticle pic x.
        77 ResponseChoixFournisseur pic x.
        77 Pause pic x.
 
        77 EOF pic 9.
+       77 EOLF pic 9.
        77 EOCA pic 9.
        77 EOR pic 9.
        77 EOA pic 9.
@@ -423,6 +434,32 @@
          05 line NoLigneArticle Col 75 pic X value "/".
          05 line NoLigneArticle Col 76 pic XXXX from Annee of ArticleDateModifAffichage.
 
+      ********** LISTE FOURNISSEUR ********
+
+       01 ListeFournisseur-E background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "LISTE DES FOURNISSEURS".
+         10 line 5 col 1 reverse-video pic X(13) value " Ref".
+         10 line 5 col 14 reverse-video pic X(21) value "Raison Sociale".
+         10 line 5 col 35 reverse-video pic X(20) value " Ville".
+         10 line 5 col 55 reverse-video pic X(15) value "Ajoute le".
+         10 line 5 col 70 reverse-video pic X(10) value "Modifie le".
+
+       01 LigneFournisseur.
+         05 line NoLigneFournisseur Col 1  pic ZZZ99 from id_fournisseur of Fournisseur.
+         05 line NoLigneFournisseur Col 14 pic X(20) from raison_sociale of Fournisseur.
+         05 line NoLigneFournisseur Col 36 pic X(20) from ville of Fournisseur.
+         05 line NoLigneFournisseur Col 55 pic XX from Jour of FournisseurDateCreationAffichage.
+         05 line NoLigneFournisseur Col 57 pic X value "/".
+         05 line NoLigneFournisseur Col 58 pic XX from Mois of FournisseurDateCreationAffichage.
+         05 line NoLigneFournisseur Col 60 pic X value "/".
+         05 line NoLigneFournisseur Col 61 pic XXXX from Annee of FournisseurDateCreationAffichage.
+         05 line NoLigneFournisseur Col 68 pic XX from Jour of FournisseurDateModifAffichage.
+         05 line NoLigneFournisseur Col 70 pic X value "/".
+         05 line NoLigneFournisseur Col 71 pic XX from Mois of FournisseurDateModifAffichage.
+         05 line NoLigneFournisseur Col 73 pic X value "/".
+         05 line NoLigneFournisseur Col 74 pic XXXX from Annee of FournisseurDateModifAffichage.
+
       ********** AJOUT ARTICLE *****
 
        01 ecran-AjoutArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
@@ -638,7 +675,7 @@
            end-exec.
 
            move date_crea of Article to ArticleDateCreationAffichage.
-           move date_crea of Article to ArticleDateModifAffichage.
+           move date_modif of Article to ArticleDateModifAffichage.
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOF
@@ -972,7 +1009,7 @@
        MenuFournisseur-trt.
            move 0 to ChoixMenuFournisseur.
            display ecran-MenuFournisseur.
-           accept ChoixMenuFournisseur line 5 col 77.
+           accept ChoixMenuFournisseur line 5 col 77 auto.
            evaluate ChoixMenuFournisseur
                when 1
                    perform ListeFournisseur
@@ -981,6 +1018,75 @@
        MenuFournisseur-fin.
            continue.
        ListeFournisseur.
+           perform ListeFournisseur-init.
+           perform ListeFournisseur-trt until EOLF = 1.
+           perform ListeFournisseur-fin.
+       ListeFournisseur-init.
+           move 0 to EOLF.
+
+      * Déclaration du curseur
+           exec sql
+               declare C-ListeFournisseur cursor for
+                   select id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays,tel, date_crea, date_modif
+                       from Fournisseur
+                          Order by raison_sociale
+           end-exec.
+
+      * Ouverture du curseur
+           exec sql
+               open C-ListeFournisseur
+           End-exec.
+
+      * Initialisation de la pagination
+           display ListeFournisseur-E.
+           move 5 to NoligneFournisseur.
+
+       ListeFournisseur-trt.
+           exec sql
+               fetch C-ListeFournisseur into :Fournisseur.id_fournisseur,
+                                         :Fournisseur.raison_sociale,
+                                         :Fournisseur.siret,
+                                         :Fournisseur.adresse,
+                                         :Fournisseur.cp,
+                                         :Fournisseur.ville,
+                                         :Fournisseur.pays,
+                                         :Fournisseur.tel,
+                                         :Fournisseur.date_crea,
+                                         :Fournisseur.date_modif
+           end-exec.
+
+           move date_crea of Fournisseur to FournisseurDateCreationAffichage.
+           move date_modif of Fournisseur to FournisseurDateModifAffichage.
+           if (sqlcode not equal 0 and SQLCODE not equal 1) then
+
+               move 1 to EOLF
+               display " Fin de la liste. Tapez entrer " line 1 col 1 with no advancing
+               accept ReponseListeFournisseur
+
+           else
+               perform AffichageListeFournisseur
+           end-if.
+
+       ListeFournisseur-fin.
+           exec sql
+               close C-ListeFournisseur
+           end-exec.
+
+       AffichageListeFournisseur.
+           Add 1 to NoLigneFournisseur.
+           Display LigneFournisseur.
+
+           if NoLigneFournisseur equal 23
+               Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
+               Move "S" to ReponseListeFournisseur
+               accept ReponseListeFournisseur line 1 col 29
+
+               if ReponseListeFournisseur = "M" or ReponseListeFournisseur = "m"
+                   move 1 to EOLF
+               else
+                   move 5 to NoLigneFournisseur
+               end-if
+           end-if.
        ChoixArticle.
            perform ChoixArticle-init.
            perform ChoixArticle-trt until EOCA = 1.
@@ -1422,25 +1528,25 @@
        ChoixFournisseur-init.
            move 0 to EOCF.
            exec sql
-               declare C-ListeFournisseur cursor for
+               declare C-ListeChoixFournisseur cursor for
                    select id_fournisseur, raison_sociale from Fournisseur
                           Order by id_fournisseur
            end-exec.
            exec sql
-             open C-ListeFournisseur
+             open C-ListeChoixFournisseur
            end-exec.
            display ecran-ChoixFournisseur.
            move 7 to NoLigneChoixFournisseur.
 
        ChoixFournisseur-trt.
            exec sql
-              fetch C-ListeFournisseur into :Fournisseur.id_fournisseur, :Fournisseur.raison_sociale
+              fetch C-ListeChoixFournisseur into :Fournisseur.id_fournisseur, :Fournisseur.raison_sociale
            end-exec.
 
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOCF
-               display " Selectionnez le fournisseur (0 pour retour) " line 5 col 10 reverse-video
+               display " Selectionnez le fournisseur (0 pour retour / 1 pour creer) " line 5 col 5 reverse-video
                accept ChoixEcranFournisseur line 5 col 77
               
            else
@@ -1451,7 +1557,7 @@
 
        ChoixFournisseur-fin.
            exec sql
-               close C-ListeFournisseur
+               close C-ListeChoixFournisseur
            end-exec.
        AffichageChoixFournisseur.
            Add 1 to NoLigneChoixFournisseur.
