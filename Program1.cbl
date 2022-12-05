@@ -81,6 +81,7 @@
          10 libelle sql char-varying (50).
          10 quantite_stock pic 9(5).
          10 quantite_min pic 9(5).
+         10 quantite_mediane pic 9(5).
          10 date_crea sql date.
          10 date_modif sql date.
 
@@ -281,6 +282,21 @@
 
       *  Variable génération commande réapprovisionnement
 
+       77 totalReapprovisionnement PIC 9(5).
+       77 CodeFournisseurPrecedent pic X(5).
+       77 testPagi pic 9.
+
+       01 VueReapproArticleFournisseur.
+         10 code_article pic 9(5).
+         10 libelle pic x(50).
+         10 quantite_stock pic 9(5).
+         10 quantite_mediane pic 9(5).
+         10 code_fournisseur  pic x(5).
+         10 raison_sociale pic x(50).
+         10 adresse pic x(50).
+         10 cp pic x(5).
+         10 ville pic x(50).
+
        01 EnteteFichierReapprovisionnementStock.
          05 ligne1.
            10 FILLER PIC X.
@@ -294,11 +310,15 @@
            10 FILLER PIC X.
            10 ville PIC X(50).
          05 ligne4.
-           10 FILLER PIC X.
-           10 FILLER PIC X(19) VALUE "Réapprovisionnement".
+           10 FILLER PIC X(36).
+           10 FILLER PIC X(33) VALUE "Réapprovisionnement stock - page".
+           10 filler pic x.
+           10 NbPage PIC Z9.
          05 Ligne5 PIC X.
          05 Ligne6.
-           10 filler pic x(95).
+           10 filler pic x(92).
+           10 filler pic x(6) value "Date :".
+           10 filler pic x.
            10 jour PIC X(2).
            10 FILLER PIC X VALUE "/".
            10 mois PIC X(2).
@@ -308,20 +328,25 @@
          05 Ligne8 PIC X(111) VALUE ALL "-".
          05 Ligne9.
            10 FILLER PIC X.
-           10 FILLER PIC X(9) VALUE "Référence".
-           10 FILLER PIC X(4).
-           10 FILLER PIC X(11) VALUE "Désignation".
+           10 FILLER PIC X(11) VALUE "Référence".
+           10 FILLER PIC X(5).
+           10 FILLER PIC X(12) VALUE "Désignation".
            10 FILLER PIC X(45).
-           10 FILLER PIC X(9) VALUE "Quantités".
+           10 FILLER PIC X(10) VALUE "Quantités".
+           10 FILLER PIC X(5).
+           10 FILLER PIC X(15) VALUE "Conditionnement".
          05 Ligne10 PIC X(111) VALUE ALL "-".
 
        01 CorpsFichierReapprovisionnementStock.
-         10 FILLER PIC X.
-         10 code_article PIC 9(10).
-         10 FILLER PIC X(8).
-         10 libelle PIC X(50).
-         10 FILLER PIC X(5).
-         10 quantiteAReapprovisionner PIC 9(5).
+         05 donneeArticle.
+           10 FILLER PIC X.
+           10 code_article pic 9(5).
+           10 filler pic x(9).
+           10 libelle pic x(50).
+           10 filler pic x(6).
+           10 quantite pic x(5).
+         05 filler pic x(9).
+         05 filler pic x(7) value "unités".
 
        01 PiedDePageFichierReapprovisionnementStock.
          10 FILLER PIC X(4) VALUE ALL "-".
@@ -335,9 +360,17 @@
        01 FinPiedDePageFichierReapprovisionnementStock.
          10 FILLER PIC X(4) VALUE ALL "-".
          10 FILLER PIC X.
-         10 FILLER PIC X(14) VALUE "Fin traitement".
+         10 FILLER PIC X(4) VALUE "Page".
          10 FILLER PIC X.
-         10 FILLER PIC X(91) VALUE ALL "-".
+         10 NbPage PIC Z9.
+         10 FILLER PIC X.
+         10 FILLER PIC X VALUE "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(12) VALUE "Fin commande".
+         10 FILLER PIC X.
+         10 FILLER PIC X(82) VALUE ALL "-".
+
+       01 LigneVide pic x(111) value all space.
 
 
       ************************************************************
@@ -971,36 +1004,46 @@
 
        ComparaisonStock-init.
            move 0 to EOCS.
-           move spaces to article.
-           move spaces to Commande.
-           move 0 to noPageReapprovisionnement.
            move 0 to nbLigneReapprovisionnement.
+           move 1 to noPageReapprovisionnement.
+           initialize VueReapproArticleFournisseur.
+           move space to CodeFournisseurPrecedent.
+
            exec sql
                declare C-ComparaisonStock cursor for
-                   select code_article, libelle, quantite_stock, quantite_min, id_fournisseur from Article
+                   select code_article, libelle, quantite_stock, quantite_mediane, id_fournisseur, raison_sociale, adresse, cp, ville from ArticleFournisseur
                    where quantite_stock <= quantite_min
                    order by id_fournisseur
            end-exec.
            exec sql
              open C-ComparaisonStock
            end-exec.
+           open output f-fichierCommandeStockBas.
 
        ComparaisonStock-trt.
+           move code_fournisseur of VueReapproArticleFournisseur to CodeFournisseurPrecedent.
+
            exec sql
                fetch C-ComparaisonStock into
-               :Article.code_article,
-               :Article.libelle,
-               :Article.quantite_stock,
-               :Article.quantite_min,
-               :Commande.code_fournisseur
+               :VueReapproArticleFournisseur.code_article,
+               :VueReapproArticleFournisseur.libelle,
+               :VueReapproArticleFournisseur.quantite_stock,
+               :VueReapproArticleFournisseur.quantite_mediane,
+               :VueReapproArticleFournisseur.code_fournisseur,
+               :VueReapproArticleFournisseur.raison_sociale,
+               :VueReapproArticleFournisseur.adresse,
+               :VueReapproArticleFournisseur.cp,
+               :VueReapproArticleFournisseur.ville
            end-exec.
            if (sqlcode not equal 0 and sqlcode not equal 1) then
                move 1 to EOCS
+               perform EcritureFichierReapprovisionnement-piedDePageFin
+           else
+               perform EcritureFichierReapprovisionnement
            end-if.
-           perform EcritureFichierReapprovisionnement.
 
        ComparaisonStock-fin.
-           continue.
+           close f-fichierCommandeStockBas.
 
       *************************************************************
       *************************************************************
@@ -1009,36 +1052,77 @@
       *************************************************************
 
        EcritureFichierReapprovisionnement.
-           if nbLigneReapprovisionnement equal 1
-               perform EcritureFichierReapprovisionnement-init
-           end-if.
-           perform EcritureFichierReapprovisionnement-trt.
-           if EOCS equal 1
-               perform EcritureFichierReapprovisionnement-fin
+      *    On change de page à chaque nouveau fournisseur 
+           if CodeFournisseurPrecedent not equal code_fournisseur of VueReapproArticleFournisseur
+           and CodeFournisseurPrecedent not equal space
+               perform EcritureFichierReapprovisionnement-piedDePageFin
+               perform SautDePageNouveauFournisseur until nbLigneReapprovisionnement equal MaxLigneReapprovisionnement
+               move 0 to nbLigneReapprovisionnement
+               move 1 to noPageReapprovisionnement
            end-if.
 
+      *    On ecrit l'entete si nouveau fournisseur ou 1er passage, ou nouvelle page
+           if nbLigneReapprovisionnement equal 0
+               perform EcritureFichierReapprovisionnement-entete
+           end-if.
 
-       EcritureFichierReapprovisionnement-init.
+      *    On écrit les lignes d'articles quoi qu'il arrive
+           perform EcritureFichierReapprovisionnement-corps
+           
+      *    Pagination
+           if nbLigneReapprovisionnement equal MaxLigneReapprovisionnement
+               perform EcritureFichierReapprovisionnement-piedDePageNouvellePage
+           end-if.
+
+       SautDePageNouveauFournisseur.
+           write e-fichierCommandeStockBas from LigneVide.
+           add 1 to nbLigneReapprovisionnement.
+
+       EcritureFichierReapprovisionnement-entete.
+           move noPageReapprovisionnement to NbPage of EnteteFichierReapprovisionnementStock.
            move jour of DateSysteme to jour of EnteteFichierReapprovisionnementStock.
            move mois of DateSysteme to mois of EnteteFichierReapprovisionnementStock.
            move annee of DateSysteme to annee of EnteteFichierReapprovisionnementStock.
-           move raison_sociale of Fournisseur to raison_sociale of EnteteFichierReapprovisionnementStock.
-           move adresse of Fournisseur to adresse of EnteteFichierReapprovisionnementStock.
-           move cp of Fournisseur to cp of EnteteFichierReapprovisionnementStock.
-           move ville of Fournisseur to ville of EnteteFichierReapprovisionnementStock.
+           move raison_sociale of VueReapproArticleFournisseur to raison_sociale of EnteteFichierReapprovisionnementStock.
+           move adresse of VueReapproArticleFournisseur to adresse of EnteteFichierReapprovisionnementStock.
+           move cp of VueReapproArticleFournisseur to cp of EnteteFichierReapprovisionnementStock.
+           move ville of VueReapproArticleFournisseur to ville of EnteteFichierReapprovisionnementStock.
+
+           write e-fichierCommandeStockBas from ligne1 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne2 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne3 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne4 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne5 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne6 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne7 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne8 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne9 of EnteteFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from ligne10 of EnteteFichierReapprovisionnementStock.
+           add 10 to nbLigneReapprovisionnement.
+
+       EcritureFichierReapprovisionnement-corps.
+           move spaces to donneeArticle of CorpsFichierReapprovisionnementStock.
+
+           subtract quantite_stock of VueReapproArticleFournisseur from quantite_mediane of VueReapproArticleFournisseur giving totalReapprovisionnement.
+           move totalReapprovisionnement to quantite of CorpsFichierReapprovisionnementStock.
+           move code_article of VueReapproArticleFournisseur to code_article of CorpsFichierReapprovisionnementStock.
+           move libelle of VueReapproArticleFournisseur to libelle of CorpsFichierReapprovisionnementStock.
+
+           write e-fichierCommandeStockBas from CorpsFichierReapprovisionnementStock.
            add 1 to nbLigneReapprovisionnement.
+           add 1 to testPagi.
 
-           write e-fichierEtatStock from ligne1 of EnteteFichierEtatStock.
-           write e-fichierEtatStock from ligne2 of EnteteFichierEtatStock.
-           write e-fichierEtatStock from ligne3 of EnteteFichierEtatStock.
-           write e-fichierEtatStock from ligne4 of EnteteFichierEtatStock.
-           write e-fichierEtatStock from ligne5 of EnteteFichierEtatStock.
-           write e-fichierEtatStock from ligne6 of EnteteFichierEtatStock.
+       EcritureFichierReapprovisionnement-piedDePageFin.
+           add 1 to nbLigneReapprovisionnement.
+           move noPageReapprovisionnement to NbPage of FinPiedDePageFichierReapprovisionnementStock.
 
-       EcritureFichierReapprovisionnement-trt.
+           write e-fichierCommandeStockBas from FinPiedDePageFichierReapprovisionnementStock.
 
-       EcritureFichierReapprovisionnement-fin.
-
+       EcritureFichierReapprovisionnement-piedDePageNouvellePage.
+           move noPageReapprovisionnement to NbPage of PiedDePageFichierReapprovisionnementStock.
+           write e-fichierCommandeStockBas from PiedDePageFichierReapprovisionnementStock.
+           add 1 to noPageReapprovisionnement.
+           move 0 to nbLigneReapprovisionnement.
 
       *************************************************************
       *************************************************************
@@ -1471,7 +1555,7 @@
       *    On vérifie que le fournisseur existe en BDD
            move zero to CodeFournisseur.
            exec sql
-             SELECT id_fournisseur INTO :CodeFournisseur FROM fournisseur WHERE id_fournisseur = :code_fournisseur 
+             SELECT id_fournisseur INTO :CodeFournisseur FROM fournisseur WHERE id_fournisseur = :commande.code_fournisseur
            end-exec.
            if (CodeFournisseur equal zero)
                move "Fournisseur inconnu" to MessageErreurCommande
