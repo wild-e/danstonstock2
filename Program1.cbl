@@ -63,9 +63,12 @@
        77 ChoixFournisseur PIC X(30) value "Afficher liste fournisseur".
        77 ChoixEcranFournisseur PIC 9 value 0.
        77 ChoixAjoutArticle pic x.
+       77 ChoixAjoutFournisseur pic x.
        77 ChoixSupprimerArticle pic x.
        77 ChoixEcranArticle PIC 99 value 0.
        77 ChoixMenuFournisseur PIC X.
+
+       77 ChoixChampObligatoire pic x.
 
        01 DateSysteme.
          10 Annee PIC 9999.
@@ -135,6 +138,16 @@
          10 date_crea sql date.
          10 date_modif sql date.
          10 raison_sociale sql char-varying (50).
+       
+       01 AjoutFournisseurInput.
+         10 raison_sociale sql char-varying (50).
+         10 siret sql char (14).
+         10 adresse sql char-varying (50).
+         10 cp sql char (5).
+         10 ville sql char-varying (50).
+         10 pays sql char-varying (50).
+         10 tel sql char-varying (15).
+        
 
        01 ArticleDateCreationAffichage.
          10 Annee pic 9999.
@@ -192,6 +205,7 @@
        77 EOCA pic 9.
        77 EOR pic 9.
        77 EOA pic 9.
+       77 EOAF pic 9.
        77 EOCS pic 9.
        77 tally-counter pic 9.
 
@@ -340,10 +354,10 @@
          10 line 1 col 1 Blank Screen.
          10 line 3 col 32 VALUE "Menu principal".
          10 line 5 col 5 from Jour of DateSysteme.
-         10 line 5 col 8 value "/".
-         10 line 5 col 9 from Mois of DateSysteme.
-         10 line 5 col 12 value "/".
-         10 line 5 col 14 from Annee of DateSysteme.
+         10 line 5 col 7 value "/".
+         10 line 5 col 8 from Mois of DateSysteme.
+         10 line 5 col 10 value "/".
+         10 line 5 col 11 from Annee of DateSysteme.
          10 line 5 col 68 VALUE "Choix: ".
          10 line 5 col 77 pic 9 from ChoixMenuArticle.
          10 line 11 col 15 VALUE "1. Gestions des articles".
@@ -460,25 +474,25 @@
          05 line NoLigneFournisseur Col 73 pic X value "/".
          05 line NoLigneFournisseur Col 74 pic XXXX from Annee of FournisseurDateModifAffichage.
 
-      ********** AJOUT ARTICLE *****
+      *************************************************************
+      *   AJOUT ARTICLE
+      *************************************************************
 
        01 ecran-AjoutArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
            10 line 1 col 1 blank screen.
            10 line 3 col 32 value "AJOUTER UN ARTICLE".
-           10 line 6 col 15 value "Libelle : ".
-           10 line 6 col 25 using libelle of AjoutArticleInput.
-           10 line 7 col 15 value "Stock : ".
-           10 line 7 col 23 pic ZZZ99 using Ecran-QuantiteStock blank when zero.
-           10 line 8 col 15 value "Stock minimal : ".
-           10 line 8 col 31 pic ZZZ99 using Ecran-QuantiteMin blank when zero.
+           10 line 6 col 15 value "Libelle ... : ".
+           10 line 6 col 29 pic x(15) using libelle of AjoutArticleInput.
+           10 line 7 col 15 value "Stock ..... : ".
+           10 line 7 col 29 pic ZZZ99 using Ecran-QuantiteStock blank when zero.
+           10 line 8 col 15 value "Stock min . : ".
+           10 line 8 col 29 pic ZZZ99 using Ecran-QuantiteMin blank when zero.
            10 line 9 col 15 value "Fournisseur : ".
            10 line 9 col 29 using ChoixFournisseur lowlight just right.
 
        01 ChoixAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-           10 line 5 col 20 value "[A] jouter - [R] evenir : ".
+           10 line 5 col 20 value "[A]jouter - [R]evenir : ".
 
-       01 ArticleAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-           10 line 5 col 1 pic x(80) value "                      Article Ajoute" blink.
 
        01 ecran-ChoixFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
            10 line 1 col 1 blank screen.
@@ -533,6 +547,10 @@
          10 line 9 col 15 value "Fournisseur : ".
          10 line 9 col 29 using raison_sociale of SuppArticleInput.
 
+      ************ Lignes d'affichage Article
+       01 ArticleAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+           10 line 5 col 1 pic x(80) value "                      Article Ajoute" blink.
+
        01 Ligne-DemandeSuppression background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : ".
 
@@ -547,13 +565,42 @@
 
        01 Ligne-ArticleSupprime background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 15 value "L article a bien ete supprime.".
+       
+      *************************************************************
+      *   AJOUT FOURNISSEUR
+      *************************************************************
 
+       01 ecran-AjoutFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "AJOUTER UN FOURNISSEUR".
+         10 line 6 col 15 value "Raison Sociale : ".
+         10 line 6 col 32 using raison_sociale of AjoutFournisseurInput.
+         10 line 7 col 15 value "SIRET ........ : ".
+         10 line 7 col 32 using siret of AjoutFournisseurInput.
+         10 line 8 col 15 value "Adresse ...... : ".
+         10 line 8 col 32 using adresse of AjoutFournisseurInput.
+         10 line 9 col 15 value "Code Postal .. : ".
+         10 line 9 col 32 using cp of AjoutFournisseurInput.
+         10 line 10 col 15 value "Ville ........ : ".
+         10 line 10 col 32 using ville of AjoutFournisseurInput.
+         10 line 11 col 15 value "Pays ......... : ".
+         10 line 11 col 32 using pays of AjoutFournisseurInput.
+         10 line 12 col 15 value "No Tel ....... : ".
+         10 line 12 col 32 using tel of AjoutFournisseurInput.
+         
+      ************ Lignes d'affichage Fournisseur ***************
+       01 FournisseurAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 1 pic x(80) value "                      Fournisseur Ajoute" blink.
 
+       01 Ligne-AlerteFournisseurPresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Ce fournisseur est deja present en base de donnee.".
+
+      ************ Lignes d'affichage generales ***************
        01 EffaceLigne5 background-color is CouleurFondEcran.
          10 line 5 col 1 pic X(80).
 
        01 Ligne-ChampObligatoire reverse-video.
-         10 line 5 col 15 value "Ce champ est obligatoire." bell.
+         10 line 5 col 10 value "Ce champ est obligatoire. [Q]uitter - [R]evenir : " bell.
 
       
        procedure division.
@@ -760,12 +807,12 @@
            else
                move "Afficher liste fournisseur" to ChoixFournisseur
                display ecran-AjoutArticle
-               accept libelle of AjoutArticleInput line 6 col 25 prompt
+               accept libelle of AjoutArticleInput line 6 col 29 prompt
                if libelle of AjoutArticleInput not equal ' '
-                   accept quantite_stock of AjoutArticleInput line 7 col 23 prompt just right
-                   accept quantite_min of AjoutArticleInput line 8 col 31 prompt just right
+                   accept quantite_stock of AjoutArticleInput line 7 col 29 prompt just right
+                   accept quantite_min of AjoutArticleInput line 8 col 29 prompt just right
                else
-      *            move space to ChoixFournisseur
+                  display Ligne-ChampObligatoire
                end-if
            end-if.
 
@@ -1013,7 +1060,8 @@
            evaluate ChoixMenuFournisseur
                when 1
                    perform ListeFournisseur
-
+               when 2
+                   perform AjoutFournisseur
            end-evaluate.
        MenuFournisseur-fin.
            continue.
@@ -1087,6 +1135,69 @@
                    move 5 to NoLigneFournisseur
                end-if
            end-if.
+       AjoutFournisseur.
+           perform AjoutFournisseur-init.
+           perform AjoutFournisseur-trt until EOAF = 1.
+           perform AjoutFournisseur-fin.
+       AjoutFournisseur-init.
+           move 0 to EOAF.
+           initialize AjoutFournisseurInput.
+       AjoutFournisseur-trt.
+           
+           display ecran-AjoutFournisseur.
+
+           if ChoixAjoutFournisseur = "a" or ChoixAjoutFournisseur = "A"
+      *    On verifie si le fournisseur est deja dans la base de donnee
+               exec sql
+                   SELECT COUNT(*) INTO :VerifFournisseurPresent
+                   FROM Fournisseur
+                   WHERE Fournisseur.raison_sociale = :AjoutFournisseurInput.raison_sociale
+               end-exec
+
+      *    Si absent on ajoute le fournisseur
+               if VerifFournisseurPresent equal 0
+                   exec sql
+                       INSERT INTO Fournisseur (raison_sociale, siret, adresse, cp, ville, pays, tel)
+                       VALUES (:AjoutFournisseurInput.raison_sociale, :AjoutFournisseurInput.siret, :AjoutFournisseurInput.adresse, :AjoutFournisseurInput.cp, :AjoutFournisseurInput.ville, :AjoutFournisseurInput.pays, :AjoutFournisseurInput.tel)
+                   end-exec
+
+                   display FournisseurAjouter
+                   move 1 to EOAF
+                   accept Pause
+               else
+                   display Ligne-AlerteFournisseurPresent
+                   initialize ChoixAjoutFournisseur
+                   accept Pause
+               end-if
+               
+           else
+               display ecran-AjoutFournisseur
+               accept raison_sociale of AjoutFournisseurInput line 6 col 32 prompt
+      *    On verifie que le champ obligatoire est bien rempli
+               if raison_sociale of AjoutFournisseurInput not equal ' '
+                   accept siret of AjoutFournisseurInput line 7 col 32 prompt
+                   accept adresse of AjoutFournisseurInput line 8 col 32 prompt
+                   accept cp of AjoutFournisseurInput line 9 col 32 prompt
+                   accept ville of AjoutFournisseurInput line 10 col 32 prompt
+                   accept pays of AjoutFournisseurInput line 11 col 32 prompt
+                   accept tel of AjoutFournisseurInput line 12 col 32 prompt
+                   move "A" to ChoixAjoutFournisseur
+                   display ChoixAjouter
+                   accept ChoixAjoutFournisseur line 5 col 46 auto reverse-video
+               else
+      *    On signale que le champ est obligatoire on propose de quitte le menu ajout
+                   move "Q" to ChoixChampObligatoire
+                   display Ligne-ChampObligatoire
+                   accept ChoixChampObligatoire line 5 col 59
+                   if ChoixChampObligatoire = "Q" or ChoixChampObligatoire = "q"
+                       move 1 to EOAF
+                   end-if
+               end-if
+           end-if.
+
+       AjoutFournisseur-fin.
+           initialize AjoutFournisseurInput.
+           initialize ChoixAjoutFournisseur.
        ChoixArticle.
            perform ChoixArticle-init.
            perform ChoixArticle-trt until EOCA = 1.
