@@ -241,6 +241,7 @@
 
        77 totalReapprovisionnement PIC 9(5).
        77 CodeFournisseurPrecedent pic X(5).
+       77 testPagi pic 9.
 
        01 VueReapproArticleFournisseur.
          10 code_article pic 9(5).
@@ -266,8 +267,10 @@
            10 FILLER PIC X.
            10 ville PIC X(50).
          05 ligne4.
-           10 FILLER PIC X(43).
-           10 FILLER PIC X(26) VALUE "Réapprovisionnement stock".
+           10 FILLER PIC X(36).
+           10 FILLER PIC X(33) VALUE "Réapprovisionnement stock - page".
+           10 filler pic x.
+           10 NbPage PIC Z9.
          05 Ligne5 PIC X.
          05 Ligne6.
            10 filler pic x(92).
@@ -314,9 +317,15 @@
        01 FinPiedDePageFichierReapprovisionnementStock.
          10 FILLER PIC X(4) VALUE ALL "-".
          10 FILLER PIC X.
-         10 FILLER PIC X(14) VALUE "Fin commande".
+         10 FILLER PIC X(4) VALUE "Page".
          10 FILLER PIC X.
-         10 FILLER PIC X(91) VALUE ALL "-".
+         10 NbPage PIC Z9.
+         10 FILLER PIC X.
+         10 FILLER PIC X VALUE "-".
+         10 FILLER PIC X.
+         10 FILLER PIC X(12) VALUE "Fin commande".
+         10 FILLER PIC X.
+         10 FILLER PIC X(82) VALUE ALL "-".
 
        01 LigneVide pic x(111) value all space.
 
@@ -884,8 +893,8 @@
 
        ComparaisonStock-init.
            move 0 to EOCS.
-           move 0 to noPageReapprovisionnement.
            move 0 to nbLigneReapprovisionnement.
+           move 1 to noPageReapprovisionnement.
            initialize VueReapproArticleFournisseur.
            move space to CodeFournisseurPrecedent.
 
@@ -938,9 +947,10 @@
                perform EcritureFichierReapprovisionnement-piedDePageFin
                perform SautDePageNouveauFournisseur until nbLigneReapprovisionnement equal MaxLigneReapprovisionnement
                move 0 to nbLigneReapprovisionnement
+               move 1 to noPageReapprovisionnement
            end-if.
 
-      *    On ecrit l'entete si nouveau fournisseur ou 1er passage
+      *    On ecrit l'entete si nouveau fournisseur ou 1er passage, ou nouvelle page
            if nbLigneReapprovisionnement equal 0
                perform EcritureFichierReapprovisionnement-entete
            end-if.
@@ -958,6 +968,7 @@
            add 1 to nbLigneReapprovisionnement.
 
        EcritureFichierReapprovisionnement-entete.
+           move noPageReapprovisionnement to NbPage of EnteteFichierReapprovisionnementStock.
            move jour of DateSysteme to jour of EnteteFichierReapprovisionnementStock.
            move mois of DateSysteme to mois of EnteteFichierReapprovisionnementStock.
            move annee of DateSysteme to annee of EnteteFichierReapprovisionnementStock.
@@ -988,17 +999,19 @@
 
            write e-fichierCommandeStockBas from CorpsFichierReapprovisionnementStock.
            add 1 to nbLigneReapprovisionnement.
-
+           add 1 to testPagi.
 
        EcritureFichierReapprovisionnement-piedDePageFin.
            add 1 to nbLigneReapprovisionnement.
+           move noPageReapprovisionnement to NbPage of FinPiedDePageFichierReapprovisionnementStock.
+
            write e-fichierCommandeStockBas from FinPiedDePageFichierReapprovisionnementStock.
 
        EcritureFichierReapprovisionnement-piedDePageNouvellePage.
-           add 1 to noPageReapprovisionnement.
            move noPageReapprovisionnement to NbPage of PiedDePageFichierReapprovisionnementStock.
            write e-fichierCommandeStockBas from PiedDePageFichierReapprovisionnementStock.
-
+           add 1 to noPageReapprovisionnement.
+           move 0 to nbLigneReapprovisionnement.
 
       *************************************************************
       *************************************************************
