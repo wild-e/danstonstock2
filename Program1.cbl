@@ -58,15 +58,21 @@
               
        77 ChoixMenuPrincipal PIC X.
        77 ChoixMenuArticle PIC X.
+       77 ChoixMenuFournisseur PIC X.
        77 ChoixMenuCommande PIC X.
+
        77 ChoixNoCommande pic X.
        77 ChoixFournisseur PIC X(30) value "Afficher liste fournisseur".
-       77 ChoixEcranFournisseur PIC 9 value 0.
+       77 ChoixEcranFournisseur PIC 99 value 0.
+
        77 ChoixAjoutArticle pic x.
-       77 ChoixAjoutFournisseur pic x.
+       77 ChoixModifArticle pic x.
        77 ChoixSupprimerArticle pic x.
        77 ChoixEcranArticle PIC 99 value 0.
-       77 ChoixMenuFournisseur PIC X.
+
+       77 ChoixAjoutFournisseur pic x.
+       77 ChoixModifFournisseur pic x.
+       77 ChoixCreationFournisseur PIC X.
 
        77 ChoixChampObligatoire pic x.
 
@@ -148,7 +154,28 @@
          10 ville sql char-varying (50).
          10 pays sql char-varying (50).
          10 tel sql char-varying (15).
+
+       01 ModifFournisseurInput.
+         10 id_fournisseur pic 9(5).
+         10 raison_sociale sql char-varying (50).
+         10 siret sql char (14).
+         10 adresse sql char-varying (50).
+         10 cp sql char (5).
+         10 ville sql char-varying (50).
+         10 pays sql char-varying (50).
+         10 tel sql char-varying (15).
         
+       01 FournisseurRecupere.
+         10 id_fournisseur pic 9(5).
+         10 raison_sociale sql char-varying (50).
+         10 siret sql char (14).
+         10 adresse sql char-varying (50).
+         10 cp sql char (5).
+         10 ville sql char-varying (50).
+         10 pays sql char-varying (50).
+         10 tel sql char-varying (15).
+         10 date_crea sql date.
+         10 date_modif sql date.
 
        01 ArticleDateCreationAffichage.
          10 Annee pic 9999.
@@ -184,10 +211,12 @@
            10 FournisseurChoisi pic X(50).
 
        77 LibelleArticleRecherche pic X(50).
+       77 RaisonSocialeFournisseurRecherche pic X(50).
        77 IdArticleRecherche pic 99.
 
        77 VerifArticlePresent pic 9.
        77 VerifFournisseurPresent pic 9.
+       77 IdFournisseurRecherche pic 9(5).
 
        77 NoLigneArticle pic 99.
        77 NoLigneChoixArticle pic 99.
@@ -213,6 +242,7 @@
        77 MessageErreurCommande pic x(80).
        77 EOCF pic 9.
        77 EOM pic 9.
+       77 EOMF pic 9.
        77 EOSUP pic 9.
        77 noPageEtatStock pic 999.
        77 nbLigneEtatStock pic 99.
@@ -522,16 +552,12 @@
            10 line 8 col 29 pic ZZZ99 using Ecran-QuantiteMin blank when zero.
            10 line 9 col 15 value "Fournisseur : ".
            10 line 9 col 29 using ChoixFournisseur lowlight just right.
-
-       01 ChoixAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-           10 line 5 col 20 value "[A]jouter - [R]evenir : ".
-
-
+    
        01 ecran-ChoixFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
            10 line 1 col 1 blank screen.
            10 line 3 col 32 value "CHOIX DU FOURNISSEUR".
            10 line 5 col 68 value "Choix :".
-           10 line 5 col 77 pic 9 from ChoixEcranFournisseur.
+           10 line 5 col 77 pic 99 from ChoixEcranFournisseur.
            10 line 7 col 1 reverse-video pic X(80) VALUE " Ref     Nom".
 
        01 ecran-ChoixArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
@@ -555,12 +581,12 @@
        01 ecran-ModifArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "MODIFIER UN ARTICLE".
-         10 line 6 col 15 value "Libelle : ".
-         10 line 6 col 25 using libelle of ModifArticleInput.
-         10 line 7 col 15 value "Stock : ".
-         10 line 7 col 23 using quantite_stock of ModifArticleInput.
-         10 line 8 col 15 value "Stock minimal : ".
-         10 line 8 col 31 using quantite_min of ModifArticleInput.
+         10 line 6 col 15 value "Libelle ... : ".
+         10 line 6 col 29 using libelle of ModifArticleInput.
+         10 line 7 col 15 value "Stock ..... : ".
+         10 line 7 col 29 using quantite_stock of ModifArticleInput.
+         10 line 8 col 15 value "Stock min . : ".
+         10 line 8 col 29 using quantite_min of ModifArticleInput.
          10 line 9 col 15 value "Fournisseur : ".
          10 line 9 col 29 using raison_sociale of ModifArticleInput.
 
@@ -581,8 +607,17 @@
          10 line 9 col 29 using raison_sociale of SuppArticleInput.
 
       ************ Lignes d'affichage Article
-       01 ArticleAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+       01 Ligne-ChoixArticleAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 20 value "[A]jouter - [R]evenir : ".
+
+       01 Ligne-ArticleAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
            10 line 5 col 1 pic x(80) value "                      Article Ajoute" blink.
+       
+       01 Ligne-ChoixArticleModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 20 value "[M]odifier - [R]evenir : ".
+
+       01 Ligne-ArticleModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+           10 line 5 col 1 pic x(80) value "                      Article Modifie" blink.
 
        01 Ligne-DemandeSuppression background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : ".
@@ -620,13 +655,47 @@
          10 line 11 col 32 using pays of AjoutFournisseurInput.
          10 line 12 col 15 value "No Tel ....... : ".
          10 line 12 col 32 using tel of AjoutFournisseurInput.
+
+      *************************************************************
+      *   MODIFIER FOURNISSEUR
+      *************************************************************
+
+       01 ecran-ModifFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "MODIFIER UN FOURNISSEUR".
+         10 line 6 col 15 value "Raison Sociale : ".
+         10 line 6 col 32 using raison_sociale of ModifFournisseurInput.
+         10 line 7 col 15 value "SIRET ........ : ".
+         10 line 7 col 32 using siret of ModifFournisseurInput.
+         10 line 8 col 15 value "Adresse ...... : ".
+         10 line 8 col 32 using adresse of ModifFournisseurInput.
+         10 line 9 col 15 value "Code Postal .. : ".
+         10 line 9 col 32 using cp of ModifFournisseurInput.
+         10 line 10 col 15 value "Ville ........ : ".
+         10 line 10 col 32 using ville of ModifFournisseurInput.
+         10 line 11 col 15 value "Pays ......... : ".
+         10 line 11 col 32 using pays of ModifFournisseurInput.
+         10 line 12 col 15 value "No Tel ....... : ".
+         10 line 12 col 32 using tel of ModifFournisseurInput.
          
       ************ Lignes d'affichage Fournisseur ***************
-       01 FournisseurAjouter background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 1 pic x(80) value "                      Fournisseur Ajoute" blink.
+       01 Ligne-FournisseurAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 1 pic x(80) value "                      Fournisseur Ajoute".
+
+       01 Ligne-FournisseurModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 1 pic x(80) value "                      Fournisseur Modifie".
+
+       01 Ligne-ChoixFournisseurModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 20 value "[M]odifier - [R]evenir : ".
 
        01 Ligne-AlerteFournisseurPresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Ce fournisseur est deja present en base de donnee.".
+
+       01 Ligne-AlerteFournisseurAbsent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Ce fournisseur n'existe pas, voulez-vous le creer ? ".
+
+       01 Ligne-ChampRaisonSocialeObligatoire reverse-video.
+         10 line 5 col 10 value "Le champ Raison Sociale est obligatoire." bell.
 
       ************ Lignes d'affichage generales ***************
        01 EffaceLigne5 background-color is CouleurFondEcran.
@@ -660,7 +729,7 @@
 
            if (sqlcode not equal 0)
              then
-               display "Erreur connexion base de donne    bn            e" line 4 col 15
+               display "Erreur connexion base de donnee" line 4 col 15
                stop run
            end-if.
 
@@ -776,7 +845,7 @@
            Display LigneArticle.
 
            if NoLigneArticle equal 23
-               Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
+               Display " Page [S]uivante - [M]enu : S" Line 1 Col 1 with no advancing
                Move "S" to ReponseListeArticle
                accept ReponseListeArticle line 1 col 29
 
@@ -799,7 +868,7 @@
            display ecran-AjoutArticle.
 
            if ChoixEcranFournisseur not equal 0
-               display ChoixAjouter
+               display Ligne-ChoixArticleAjoute
                move ChoixEcranFournisseur to id_fournisseur of AjoutArticleInput
                move "A" to ChoixAjoutArticle 
                accept ChoixAjoutArticle line 5 col 46 auto reverse-video
@@ -822,7 +891,7 @@
                           VALUES (:AjoutArticleInput.id_fournisseur, :AjoutArticleInput.libelle, :AjoutArticleInput.quantite_stock, :AjoutArticleInput.quantite_min)
                        end-exec
                                             
-                       display ArticleAjouter
+                       display Ligne-ArticleAjoute
                        accept Pause
                        initialize ChoixEcranFournisseur
                        initialize EcranArticleInput
@@ -886,10 +955,11 @@
            End-exec.
        ModifArticle-trt.
            move 1 to EOM.
+           initialize Article.
            initialize ArticleRecupere.
            initialize ModifArticleInput.
            display ecran-ModifArticle.
-           accept libelle of ModifArticleInput line 6 col 25.
+           accept libelle of ModifArticleInput line 6 col 29.
 
            if libelle of ModifArticleInput equal ' '
                perform ChoixArticle
@@ -910,35 +980,81 @@
 
            display ecran-ModifArticle.
 
-           accept libelle of ModifArticleInput line 6 col 25 with update.
-           accept quantite_stock of ModifArticleInput line 7 col 23.
-           accept quantite_min of ModifArticleInput line 8 col 31.
-
+           accept libelle of ModifArticleInput line 6 col 29 .
+           accept quantite_stock of ModifArticleInput line 7 col 29.
+           accept quantite_min of ModifArticleInput line 8 col 29.
            accept raison_sociale of ModifArticleInput line 9 col 29.
-
+      *    On vérifie si l'article modifié est déjà en base de données
+           exec sql
+               SELECT COUNT(*) INTO :VerifArticlePresent
+               FROM Article
+               WHERE Article.Libelle = :ModifArticleInput.libelle
+           end-exec
            if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere
                exec sql
                  SELECT COUNT(*) INTO :VerifFournisseurPresent
                  FROM Fournisseur
-                 WHERE raison_social = :ModifArticleInput.raison_sociale
+                 WHERE raison_sociale = :ModifArticleInput.raison_sociale
                end-exec
-               display VerifFournisseurPresent line 6 col 25 reverse-video
-               accept Pause
-           end-if.
+               if VerifFournisseurPresent equal 0
+                   display Ligne-AlerteFournisseurAbsent
+                   move "O" to ChoixCreationFournisseur
+                   accept ChoixCreationFournisseur line 5 col 60
+
+                   if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
+                       exec sql
+                         INSERT INTO Fournisseur(raison_sociale)
+                         VALUES (:ModifArticleInput.raison_sociale)
+                       end-exec
+                       if sqlcode equal 0
+                           display Ligne-FournisseurAjoute
+                           accept Pause
+                           exec sql
+                             SELECT id_fournisseur into :ModifArticleInput.id_fournisseur
+                             FROM Fournisseur
+                             WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                           end-exec
+                           display id_fournisseur of ModifArticleInput
+                           perform ModifArticleBDD
+                       end-if
+                   end-if
+               end-if
+           else
                exec sql
-                   UPDATE article
-                   SET libelle = :ModifArticleInput.libelle,
-                       id_fournisseur = :ArticleRecupere.id_fournisseur,
-                       quantite_stock = :ModifArticleInput.quantite_stock,
-                       quantite_min = :ModifArticleInput.quantite_min,
-                       date_modif = getdate()
+                   SELECT id_fournisseur INTO :ModifArticleInput.id_fournisseur
+                   FROM Fournisseur
+                   WHERE raison_sociale = : ModifArticleInput.raison_sociale
+               end-exec
+               perform ModifArticleBDD
+           end-if.
+          
+       ModifArticle-fin.
+           continue.
+       ModifArticleBDD.
+           move "M" to ChoixModifArticle.
+           display EffaceLigne5.
+           display Ligne-ChoixArticleModifie.
+           accept ChoixModifArticle line 5 col 47.
+           if ChoixModifArticle = "M" or ChoixModifArticle = "m"
+               display code_article of ArticleRecupere
+               display id_fournisseur of ModifArticleInput
+
+               exec sql
+                   UPDATE Article
+                   SET libelle =           :ModifArticleInput.libelle,
+                       id_fournisseur =    :ModifArticleInput.id_fournisseur,
+                       quantite_stock =    :ModifArticleInput.quantite_stock,
+                       quantite_min =      :ModifArticleInput.quantite_min,
+                       date_modif =        getdate()
                    WHERE
                        code_article = :ArticleRecupere.code_article
-               end-exec.
-       ModifArticle-fin.
-           initialize ArticleRecupere.
-           initialize ModifArticleInput.
-
+               end-exec
+               if sqlcode equal 0
+                   move 1 to EOM
+                   display Ligne-ArticleModifie
+                   accept Pause
+               end-if
+           end-if.
        SuppArticle.
            perform SuppArticle-init
            perform SuppArticle-trt until EOSUP = 1.
@@ -950,7 +1066,7 @@
            initialize SuppArticleInput.
            move 1 to EOSUP.
            display ecran-SuppArticle.
-           accept libelle of SuppArticleInput line 6 col 25.
+           accept libelle of SuppArticleInput line 6 col 29.
 
            move libelle of SuppArticleInput to LibelleArticleRecherche.
            perform RechercheArticleParNom.
@@ -990,6 +1106,60 @@
 
        SuppArticle-fin.
            initialize ArticleRecupere.
+       ChoixArticle.
+           perform ChoixArticle-init.
+           perform ChoixArticle-trt until EOCA = 1.
+           perform ChoixArticle-fin.
+       ChoixArticle-init.
+           move 0 to EOCA.
+           exec sql
+               declare C-ListeChoixArticle cursor for
+                   select code_article, libelle from Article
+                          Order by libelle
+           end-exec.
+           exec sql
+             open C-ListeChoixArticle
+           end-exec.
+           display ecran-ChoixArticle.
+           move 7 to NoLigneChoixArticle.
+       ChoixArticle-trt.
+           exec sql
+             fetch C-ListeChoixArticle into :Article.code_article, :Article.libelle
+          end-exec.
+
+           if (sqlcode not equal 0 and SQLCODE not equal 1) then
+
+               move 1 to EOCA
+               display " Selectionnez l article (0 pour retour) " line 5 col 10 reverse-video
+               accept ChoixEcranArticle line 5 col 77
+
+           else
+
+               perform AffichageChoixArticle
+
+           end-if.
+       ChoixArticle-fin.
+           exec sql
+             close C-ListeChoixArticle
+           end-exec.
+       AffichageChoixArticle.
+           Add 1 to NoLigneChoixArticle.
+
+           Display LigneChoixArticle.
+
+           if NoLigneChoixArticle equal 23
+
+               Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
+               Move "S" to responseChoixArticle
+               accept responseChoixArticle line 1 col 29
+
+               if responseChoixArticle = "M" or responseChoixArticle = "m"
+                   move 1 to EOCA
+
+               else
+                   move 7 to NoLigneChoixArticle
+               end-if
+           end-if.
 
       *************************************************************
       *************************************************************
@@ -1146,6 +1316,8 @@
                    perform ListeFournisseur
                when 2
                    perform AjoutFournisseur
+               when 3
+                   perform ModifFournisseur
            end-evaluate.
        MenuFournisseur-fin.
            continue.
@@ -1174,17 +1346,18 @@
            move 5 to NoligneFournisseur.
 
        ListeFournisseur-trt.
+           initialize Fournisseur.
            exec sql
-               fetch C-ListeFournisseur into :Fournisseur.id_fournisseur,
-                                         :Fournisseur.raison_sociale,
-                                         :Fournisseur.siret,
-                                         :Fournisseur.adresse,
-                                         :Fournisseur.cp,
-                                         :Fournisseur.ville,
-                                         :Fournisseur.pays,
-                                         :Fournisseur.tel,
-                                         :Fournisseur.date_crea,
-                                         :Fournisseur.date_modif
+               fetch C-ListeFournisseur into   :Fournisseur.id_fournisseur,
+                                               :Fournisseur.raison_sociale,
+                                               :Fournisseur.siret,
+                                               :Fournisseur.adresse,
+                                               :Fournisseur.cp,
+                                               :Fournisseur.ville,
+                                               :Fournisseur.pays,
+                                               :Fournisseur.tel,
+                                               :Fournisseur.date_crea,
+                                               :Fournisseur.date_modif
            end-exec.
 
            move date_crea of Fournisseur to FournisseurDateCreationAffichage.
@@ -1245,7 +1418,8 @@
                        VALUES (:AjoutFournisseurInput.raison_sociale, :AjoutFournisseurInput.siret, :AjoutFournisseurInput.adresse, :AjoutFournisseurInput.cp, :AjoutFournisseurInput.ville, :AjoutFournisseurInput.pays, :AjoutFournisseurInput.tel)
                    end-exec
 
-                   display FournisseurAjouter
+                   display Fournisseur
+                   display Ligne-FournisseurAjoute
                    move 1 to EOAF
                    accept Pause
                else
@@ -1266,7 +1440,7 @@
                    accept pays of AjoutFournisseurInput line 11 col 32 prompt
                    accept tel of AjoutFournisseurInput line 12 col 32 prompt
                    move "A" to ChoixAjoutFournisseur
-                   display ChoixAjouter
+                   display Ligne-ChoixArticleAjoute
                    accept ChoixAjoutFournisseur line 5 col 46 auto reverse-video
                else
       *    On signale que le champ est obligatoire on propose de quitte le menu ajout
@@ -1282,61 +1456,133 @@
        AjoutFournisseur-fin.
            initialize AjoutFournisseurInput.
            initialize ChoixAjoutFournisseur.
-       ChoixArticle.
-           perform ChoixArticle-init.
-           perform ChoixArticle-trt until EOCA = 1.
-           perform ChoixArticle-fin.
-       ChoixArticle-init.
-           move 0 to EOCA.
+       ModifFournisseur.
+           perform ModifFournisseur-init
+           perform ModifFournisseur-trt until EOMF = 1.
+           perform ModifFournisseur-fin.
+
+       ModifFournisseur-init.
+           move 0 to EOMF.
            exec sql
-               declare C-ListeChoixArticle cursor for
-                   select code_article, libelle from Article
-                          Order by libelle
+           declare C-ModifFournisseur cursor for
+                      select id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays,tel, date_crea, date_modif
+                              from Fournisseur
+                                 Order by raison_sociale
            end-exec.
+
            exec sql
-             open C-ListeChoixArticle
-           end-exec.
-           display ecran-ChoixArticle.
-           move 7 to NoLigneChoixArticle.
-       ChoixArticle-trt.
-           exec sql
-             fetch C-ListeChoixArticle into :Article.code_article, :Article.libelle
-          end-exec.
+               open C-ModifFournisseur
+           End-exec.
+       ModifFournisseur-trt.
+           move 1 to EOMF.
+           initialize FournisseurRecupere.
+           initialize ModifFournisseurInput.
+           display ecran-ModifFournisseur.
+           accept raison_sociale of ModifFournisseurInput line 6 col 32.
 
-           if (sqlcode not equal 0 and SQLCODE not equal 1) then
-
-               move 1 to EOCA
-               display " Selectionnez l article (0 pour retour) " line 5 col 10 reverse-video
-               accept ChoixEcranArticle line 5 col 77
-
+           if raison_sociale of ModifFournisseurInput equal ' '
+               perform ChoixDuFournisseur
+               move ChoixEcranFournisseur to IdFournisseurRecherche
+               perform RechercheFournisseurParId
+               initialize IdFournisseurRecherche
            else
-
-               perform AffichageChoixArticle
-
+               move raison_sociale of ModifFournisseurInput to RaisonSocialeFournisseurRecherche
+               perform RechercheFournisseurParNom
+               initialize RaisonSocialeFournisseurRecherche
            end-if.
-       ChoixArticle-fin.
-           exec sql
-             close C-ListeChoixArticle
-           end-exec.
-       AffichageChoixArticle.
-           Add 1 to NoLigneChoixArticle.
 
-           Display LigneChoixArticle.
+           if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' '
+               move raison_sociale of FournisseurRecupere to raison_sociale of ModifFournisseurInput
+               move siret of FournisseurRecupere to siret of ModifFournisseurInput
+               move adresse of FournisseurRecupere to adresse of ModifFournisseurInput
+               move cp of FournisseurRecupere to cp of ModifFournisseurInput
+               move ville of FournisseurRecupere to ville of ModifFournisseurInput
+               move pays of FournisseurRecupere to pays of ModifFournisseurInput
+               move tel of FournisseurRecupere to tel of ModifFournisseurInput
 
-           if NoLigneChoixArticle equal 23
+               display ecran-ModifFournisseur
 
-               Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
-               Move "S" to responseChoixArticle
-               accept responseChoixArticle line 1 col 29
-
-               if responseChoixArticle = "M" or responseChoixArticle = "m"
-                   move 1 to EOCA
-
+               accept raison_sociale of ModifFournisseurInput line 6 col 32 prompt
+               accept siret of ModifFournisseurInput line 7 col 32 prompt
+               accept adresse of ModifFournisseurInput line 8 col 32 prompt
+               accept cp of ModifFournisseurInput line 9 col 32 prompt
+               accept ville of ModifFournisseurInput line 10 col 32 prompt
+               accept pays of ModifFournisseurInput line 11 col 32 prompt
+               accept tel of ModifFournisseurInput line 12 col 32 prompt
+               if  raison_sociale of ModifFournisseurInput = ' '
+       
+                   display Ligne-ChampRaisonSocialeObligatoire
+                   accept Pause
                else
-                   move 7 to NoLigneChoixArticle
+                   if raison_sociale of ModifFournisseurInput = ' ' and
+                     siret of ModifFournisseurInput = ' ' and
+                     adresse of ModifFournisseurInput = ' ' and
+                     cp of ModifFournisseurInput = ' ' and
+                     ville of ModifFournisseurInput = ' ' and
+                     pays of ModifFournisseurInput = ' ' and
+                     tel of ModifFournisseurInput = ' ' then
+       
+                       continue
+                   else
+                       if raison_sociale of ModifFournisseurInput <> raison_sociale of FournisseurRecupere
+                           initialize VerifFournisseurPresent
+                           exec sql
+                               SELECT COUNT(*) INTO :VerifFournisseurPresent
+                               FROM Fournisseur
+                               WHERE raison_sociale = :ModifFournisseurInput.raison_sociale
+                           end-exec
+                       if VerifFournisseurPresent <> 0
+                           display Ligne-AlerteFournisseurPresent
+                           accept Pause
+                       else
+                           if raison_sociale of ModifFournisseurInput = ' ' and raison_sociale of FournisseurRecupere
+                             <> ' '
+                               display Ligne-ChampRaisonSocialeObligatoire
+                               accept Pause
+                           else
+                               perform ModifFournisseurBDD
+                           end-if
+                       end-if
+                   else
+                       perform ModifFournisseurBDD
+                   end-if
+               end-if
+               end-if
+           else
+               continue
+           end-if.
+
+       ModifFournisseur-fin.
+           initialize FournisseurRecupere.
+           initialize ModifFournisseurInput.
+       
+       ModifFournisseurBDD.
+           move "M" to ChoixModifFournisseur.
+           display EffaceLigne5.
+           display Ligne-ChoixFournisseurModifie.
+           accept ChoixModifFournisseur line 5 col 47.
+           if ChoixModifFournisseur = "M" or ChoixModifFournisseur = "m"
+               exec sql
+               UPDATE Fournisseur
+                   SET raison_sociale =    :ModifFournisseurInput.raison_sociale,
+                       siret =             :ModifFournisseurInput.siret,
+                       adresse =           :ModifFournisseurInput.adresse,
+                       cp =                :ModifFournisseurInput.cp,
+                       ville =             :ModifFournisseurInput.ville,
+                       pays =              :ModifFournisseurInput.pays,
+                       tel =               :ModifFournisseurInput.tel,
+                       date_modif =        getdate()
+                   WHERE
+                       id_Fournisseur = :FournisseurRecupere.id_Fournisseur
+               end-exec
+               
+               if sqlcode equal 0
+                   move 1 to EOM
+                   display Ligne-FournisseurModifie
+                   accept Pause
                end-if
            end-if.
-
+           
       *************************************************************
       *************************************************************
       * Gestion menu commande
@@ -1741,7 +1987,7 @@
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOCF
-               display " Selectionnez le fournisseur (0 pour retour / 1 pour creer) " line 5 col 5 reverse-video
+               display "Selectionnez le fournisseur" line 5 col 10 reverse-video
                accept ChoixEcranFournisseur line 5 col 77
               
            else
@@ -1800,4 +2046,38 @@
               FROM ArticleFournisseur
               WHERE code_article = :IdArticleRecherche
           end-exec.
+
+      ***************************************************************************
+      *   Recherche un Fournisseur dans la BDD par sa raison sociale            *
+      *                                                                         *
+      *   Renseigner RaisonSocialeFournisseurRecherche avec la raison sociale   *
+      ***************************************************************************
+       RechercheFournisseurParNom.
+           exec sql
+              SELECT id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays, tel, date_crea, date_modif
+              INTO :FournisseurRecupere.id_fournisseur, :FournisseurRecupere.raison_sociale, :FournisseurRecupere.siret,
+                                :FournisseurRecupere.adresse, :FournisseurRecupere.cp, :FournisseurRecupere.ville, :FournisseurRecupere.pays, :FournisseurRecupere.tel, :FournisseurRecupere.date_crea, :FournisseurRecupere.date_modif
+              FROM Fournisseur
+              WHERE raison_sociale = :RaisonSocialeFournisseurRecherche
+          end-exec.
+
+      ***************************************************************************
+      *   Recherche un Fournisseur dans la BDD par son ID                       *
+      *                                                                         *
+      *   Renseigner IdFournisseurRecherche avec l id_fournisseur               *
+      ***************************************************************************
+       RechercheFournisseurParId.
+           exec sql
+              SELECT id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays, tel, date_crea, date_modif
+              INTO :FournisseurRecupere.id_fournisseur, :FournisseurRecupere.raison_sociale, :FournisseurRecupere.siret,
+                                :FournisseurRecupere.adresse, :FournisseurRecupere.cp, :FournisseurRecupere.ville, :FournisseurRecupere.pays, :FournisseurRecupere.tel, :FournisseurRecupere.date_crea, :FournisseurRecupere.date_modif
+              FROM Fournisseur
+              WHERE id_fournisseur = :IdFournisseurRecherche
+          end-exec.
+
+
+
+
+
+
        end program Program1.
