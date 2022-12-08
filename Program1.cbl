@@ -70,6 +70,7 @@
        77 ChoixSupprimerArticle pic x.
        77 ChoixEcranArticle PIC 99 value 0.
 
+       77 ChoixDetailFournisseur pic x.
        77 ChoixAjoutFournisseur pic x.
        77 ChoixModifFournisseur pic x.
        77 ChoixSupprimerFournisseur pic x.
@@ -147,6 +148,17 @@
          10 date_modif sql date.
          10 raison_sociale sql char-varying (50).
        
+       01 DetailFournisseurInput.
+         10 raison_sociale sql char-varying (50).
+         10 siret sql char (14).
+         10 adresse sql char-varying (50).
+         10 cp sql char (5).
+         10 ville sql char-varying (50).
+         10 pays sql char-varying (50).
+         10 tel sql char-varying (15).
+         10 date_crea sql date.
+         10 date_modif sql date.
+
        01 AjoutFournisseurInput.
          10 raison_sociale sql char-varying (50).
          10 siret sql char (14).
@@ -524,6 +536,7 @@
          05 line NoLigneArticle Col 75 pic X value "/".
          05 line NoLigneArticle Col 76 pic XXXX from Annee of ArticleDateModifAffichage.
 
+
       ********** LISTE FOURNISSEUR ********
 
        01 ListeFournisseur-E background-color is CouleurFondEcran foreground-color is CouleurCaractere.
@@ -549,6 +562,28 @@
          05 line NoLigneFournisseur Col 71 pic XX from Mois of FournisseurDateModifAffichage.
          05 line NoLigneFournisseur Col 73 pic X value "/".
          05 line NoLigneFournisseur Col 74 pic XXXX from Annee of FournisseurDateModifAffichage.
+
+       01 ecran-DetailFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "INFORMATIONS FOURNISSEUR".
+         10 line 6 col 15 value "Raison Sociale : ".
+         10 line 6 col 32 using raison_sociale of DetailFournisseurInput.
+         10 line 7 col 15 value "SIRET ........ : ".
+         10 line 7 col 32 using siret of DetailFournisseurInput.
+         10 line 8 col 15 value "Adresse ...... : ".
+         10 line 8 col 32 using adresse of DetailFournisseurInput.
+         10 line 9 col 15 value "Code Postal .. : ".
+         10 line 9 col 32 using cp of DetailFournisseurInput.
+         10 line 10 col 15 value "Ville ........ : ".
+         10 line 10 col 32 using ville of DetailFournisseurInput.
+         10 line 11 col 15 value "Pays ......... : ".
+         10 line 11 col 32 using pays of DetailFournisseurInput.
+         10 line 12 col 15 value "No Tel ....... : ".
+         10 line 12 col 32 using tel of DetailFournisseurInput.
+         10 line 13 col 15 value "Cree le ...... : ".
+         10 line 13 col 32 using date_crea of DetailFournisseurInput.
+         10 line 14 col 15 value "Modifie le.... : ".
+         10 line 14 col 32 using date_modif of DetailFournisseurInput.
 
       *************************************************************
       *   AJOUT ARTICLE
@@ -714,6 +749,9 @@
          10 line 12 col 32 using tel of SuppFournisseurInput.
          
       ************ Lignes d'affichage Fournisseur ***************
+       01 Ligne-ChoixDetailFournisseur background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "[R]evenir - [M]odifier - [S]pprimer : ".
+
        01 Ligne-FournisseurAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 1 pic x(80) value "                      Fournisseur Ajoute".
 
@@ -1372,76 +1410,51 @@
        MenuFournisseur-fin.
            continue.
        ListeFournisseur.
-           perform ListeFournisseur-init.
-           perform ListeFournisseur-trt until EOLF = 1.
-           perform ListeFournisseur-fin.
-       ListeFournisseur-init.
-           move 0 to EOLF.
+           perform DetailFournisseur-init.
+           perform DetailFournisseur-trt until EOF = 1.
+           perform DetailFournisseur-fin.
+       DetailFournisseur-init.
+           move 0 to EOF.
 
-      * Déclaration du curseur
-           exec sql
-               declare C-ListeFournisseur cursor for
-                   select id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays,tel, date_crea, date_modif
-                       from Fournisseur
-                          Order by raison_sociale
-           end-exec.
-
-      * Ouverture du curseur
-           exec sql
-               open C-ListeFournisseur
-           End-exec.
-
-      * Initialisation de la pagination
-           display ListeFournisseur-E.
-           move 5 to NoligneFournisseur.
-
-       ListeFournisseur-trt.
-           initialize Fournisseur.
-           exec sql
-               fetch C-ListeFournisseur into   :Fournisseur.id_fournisseur,
-                                               :Fournisseur.raison_sociale,
-                                               :Fournisseur.siret,
-                                               :Fournisseur.adresse,
-                                               :Fournisseur.cp,
-                                               :Fournisseur.ville,
-                                               :Fournisseur.pays,
-                                               :Fournisseur.tel,
-                                               :Fournisseur.date_crea,
-                                               :Fournisseur.date_modif
-           end-exec.
-
-           move date_crea of Fournisseur to FournisseurDateCreationAffichage.
-           move date_modif of Fournisseur to FournisseurDateModifAffichage.
-           if (sqlcode not equal 0 and SQLCODE not equal 1) then
-
-               move 1 to EOLF
-               display " Fin de la liste. Tapez entrer " line 1 col 1 with no advancing
-               accept ReponseListeFournisseur
-
-           else
-               perform AffichageListeFournisseur
+       DetailFournisseur-trt.
+           move 1 to EOF.
+           initialize ChoixEcranFournisseur.
+           initialize IdFournisseurRecherche.
+           perform ChoixDuFournisseur.
+           move ChoixEcranFournisseur to IdFournisseurRecherche.
+           if ChoixEcranFournisseur <> 0
+               perform RechercheFournisseurParId
+               move raison_sociale of FournisseurRecupere to raison_sociale of DetailFournisseurInput
+               move siret of FournisseurRecupere to siret of DetailFournisseurInput
+               move adresse of FournisseurRecupere to adresse of DetailFournisseurInput
+               move cp of FournisseurRecupere to cp of DetailFournisseurInput
+               move ville of FournisseurRecupere to ville of DetailFournisseurInput
+               move pays of FournisseurRecupere to pays of DetailFournisseurInput
+               move tel of FournisseurRecupere to tel of DetailFournisseurInput
+               move date_crea of FournisseurRecupere to date_crea of DetailFournisseurInput
+               move date_modif of FournisseurRecupere to date_modif of DetailFournisseurInput
+               perform AffichageDetailFournisseur
            end-if.
+       DetailFournisseur-fin.
+           continue.
 
-       ListeFournisseur-fin.
-           exec sql
-               close C-ListeFournisseur
-           end-exec.
-
-       AffichageListeFournisseur.
-           Add 1 to NoLigneFournisseur.
-           Display LigneFournisseur.
-
-           if NoLigneFournisseur equal 23
-               Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
-               Move "S" to ReponseListeFournisseur
-               accept ReponseListeFournisseur line 1 col 29
-
-               if ReponseListeFournisseur = "M" or ReponseListeFournisseur = "m"
-                   move 1 to EOLF
-               else
-                   move 5 to NoLigneFournisseur
-               end-if
-           end-if.
+       AffichageDetailFournisseur.
+           move "R" to ChoixDetailFournisseur
+           display ecran-DetailFournisseur.
+           display Ligne-ChoixDetailFournisseur
+           accept ChoixDetailFournisseur line 5 col 47 reverse-video.
+           evaluate ChoixDetailFournisseur
+               when "M"
+               when "m"
+                   move raison_sociale of DetailFournisseurInput to raison_sociale of ModifFournisseurInput
+                   perform ModifFournisseur
+               when "S"
+               when "s"
+                   move raison_sociale of DetailFournisseurInput to raison_sociale of SuppFournisseurInput
+                   perform SuppFournisseur
+               when other
+                   continue
+           end-evaluate.
        AjoutFournisseur.
            perform AjoutFournisseur-init.
            perform AjoutFournisseur-trt until EOAF = 1.
@@ -1491,12 +1504,12 @@
                    accept tel of AjoutFournisseurInput line 12 col 32 prompt
                    move "A" to ChoixAjoutFournisseur
                    display Ligne-ChoixArticleAjoute
-                   accept ChoixAjoutFournisseur line 5 col 46 auto reverse-video
+                   accept ChoixAjoutFournisseur line 5 col 44 auto reverse-video
                else
       *    On signale que le champ est obligatoire on propose de quitte le menu ajout
                    move "Q" to ChoixChampObligatoire
                    display Ligne-ChampObligatoire
-                   accept ChoixChampObligatoire line 5 col 59
+                   accept ChoixChampObligatoire line 5 col 59 reverse-video
                    if ChoixChampObligatoire = "Q" or ChoixChampObligatoire = "q"
                        move 1 to EOAF
                    end-if
@@ -1526,11 +1539,10 @@
        ModifFournisseur-trt.
            move 1 to EOMF.
            initialize FournisseurRecupere.
-           initialize ModifFournisseurInput.
            display ecran-ModifFournisseur.
-           accept raison_sociale of ModifFournisseurInput line 6 col 32.
 
            if raison_sociale of ModifFournisseurInput equal ' '
+               accept raison_sociale of ModifFournisseurInput line 6 col 32
                perform ChoixDuFournisseur
                move ChoixEcranFournisseur to IdFournisseurRecherche
                perform RechercheFournisseurParId
@@ -1541,62 +1553,71 @@
                initialize RaisonSocialeFournisseurRecherche
            end-if.
 
-           if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' '
-               move raison_sociale of FournisseurRecupere to raison_sociale of ModifFournisseurInput
-               move siret of FournisseurRecupere to siret of ModifFournisseurInput
-               move adresse of FournisseurRecupere to adresse of ModifFournisseurInput
-               move cp of FournisseurRecupere to cp of ModifFournisseurInput
-               move ville of FournisseurRecupere to ville of ModifFournisseurInput
-               move pays of FournisseurRecupere to pays of ModifFournisseurInput
-               move tel of FournisseurRecupere to tel of ModifFournisseurInput
+           if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' ' or raison_sociale of ModifFournisseurInput <> ' '
+               exec sql
+                   SELECT COUNT(*) INTO :VerifFournisseurPresent
+                   FROM Fournisseur
+                   WHERE raison_sociale = :ModifFournisseurInput.raison_sociale
+                   OR    raison_sociale = :FournisseurRecupere.raison_sociale
+               end-exec
+               if VerifFournisseurPresent <> 0
+                   move raison_sociale of FournisseurRecupere to raison_sociale of ModifFournisseurInput
+                   move siret of FournisseurRecupere to siret of ModifFournisseurInput
+                   move adresse of FournisseurRecupere to adresse of ModifFournisseurInput
+                   move cp of FournisseurRecupere to cp of ModifFournisseurInput
+                   move ville of FournisseurRecupere to ville of ModifFournisseurInput
+                   move pays of FournisseurRecupere to pays of ModifFournisseurInput
+                   move tel of FournisseurRecupere to tel of ModifFournisseurInput
 
-               display ecran-ModifFournisseur
+                   display ecran-ModifFournisseur
 
-               accept raison_sociale of ModifFournisseurInput line 6 col 32 prompt
-               accept siret of ModifFournisseurInput line 7 col 32 prompt
-               accept adresse of ModifFournisseurInput line 8 col 32 prompt
-               accept cp of ModifFournisseurInput line 9 col 32 prompt
-               accept ville of ModifFournisseurInput line 10 col 32 prompt
-               accept pays of ModifFournisseurInput line 11 col 32 prompt
-               accept tel of ModifFournisseurInput line 12 col 32 prompt
-               if  raison_sociale of ModifFournisseurInput = ' '
-       
-                   display Ligne-ChampRaisonSocialeObligatoire
-                   accept Pause
-               else
-                   if raison_sociale of ModifFournisseurInput = ' ' and
-                     siret of ModifFournisseurInput = ' ' and
-                     adresse of ModifFournisseurInput = ' ' and
-                     cp of ModifFournisseurInput = ' ' and
-                     ville of ModifFournisseurInput = ' ' and
-                     pays of ModifFournisseurInput = ' ' and
-                     tel of ModifFournisseurInput = ' ' then
-       
-                       continue
+                   accept raison_sociale of ModifFournisseurInput line 6 col 32 prompt
+                   accept siret of ModifFournisseurInput line 7 col 32 prompt
+                   accept adresse of ModifFournisseurInput line 8 col 32 prompt
+                   accept cp of ModifFournisseurInput line 9 col 32 prompt
+                   accept ville of ModifFournisseurInput line 10 col 32 prompt
+                   accept pays of ModifFournisseurInput line 11 col 32 prompt
+                   accept tel of ModifFournisseurInput line 12 col 32 prompt
+                   if  raison_sociale of ModifFournisseurInput = ' '
+                       display Ligne-ChampRaisonSocialeObligatoire
+                       accept Pause
                    else
-                       if raison_sociale of ModifFournisseurInput <> raison_sociale of FournisseurRecupere
-                           initialize VerifFournisseurPresent
-                           exec sql
-                               SELECT COUNT(*) INTO :VerifFournisseurPresent
-                               FROM Fournisseur
-                               WHERE raison_sociale = :ModifFournisseurInput.raison_sociale
-                           end-exec
-                       if VerifFournisseurPresent <> 0
-                           display Ligne-AlerteFournisseurPresent
-                           accept Pause
+                       if raison_sociale of ModifFournisseurInput = ' ' and
+                         siret of ModifFournisseurInput = ' ' and
+                         adresse of ModifFournisseurInput = ' ' and
+                         cp of ModifFournisseurInput = ' ' and
+                         ville of ModifFournisseurInput = ' ' and
+                         pays of ModifFournisseurInput = ' ' and
+                         tel of ModifFournisseurInput = ' ' then
+                           continue
                        else
-                           if raison_sociale of ModifFournisseurInput = ' ' and raison_sociale of FournisseurRecupere
-                             <> ' '
-                               display Ligne-ChampRaisonSocialeObligatoire
-                               accept Pause
+                           if raison_sociale of ModifFournisseurInput <> raison_sociale of FournisseurRecupere
+                               initialize VerifFournisseurPresent
+                               exec sql
+                                   SELECT COUNT(*) INTO :VerifFournisseurPresent
+                                   FROM Fournisseur
+                                   WHERE raison_sociale = :ModifFournisseurInput.raison_sociale
+                               end-exec
+                               if VerifFournisseurPresent <> 0
+                                   display Ligne-AlerteFournisseurPresent
+                                   accept Pause
+                               else
+                                   if raison_sociale of ModifFournisseurInput = ' ' and raison_sociale of FournisseurRecupere
+                                     <> ' '
+                                       display Ligne-ChampRaisonSocialeObligatoire
+                                       accept Pause
+                                   else
+                                       perform ModifFournisseurBDD
+                                   end-if
+                               end-if
                            else
                                perform ModifFournisseurBDD
                            end-if
                        end-if
-                   else
-                       perform ModifFournisseurBDD
                    end-if
-               end-if
+               else
+                   display Ligne-AlerteSuppFournisseurAbsent
+                   accept Pause
                end-if
            else
                continue
@@ -1607,29 +1628,37 @@
            initialize ModifFournisseurInput.
        
        ModifFournisseurBDD.
-           move "M" to ChoixModifFournisseur.
-           display EffaceLigne5.
-           display Ligne-ChoixFournisseurModifie.
-           accept ChoixModifFournisseur line 5 col 47.
-           if ChoixModifFournisseur = "M" or ChoixModifFournisseur = "m"
-               exec sql
-               UPDATE Fournisseur
-                   SET raison_sociale =    :ModifFournisseurInput.raison_sociale,
-                       siret =             :ModifFournisseurInput.siret,
-                       adresse =           :ModifFournisseurInput.adresse,
-                       cp =                :ModifFournisseurInput.cp,
-                       ville =             :ModifFournisseurInput.ville,
-                       pays =              :ModifFournisseurInput.pays,
-                       tel =               :ModifFournisseurInput.tel,
-                       date_modif =        getdate()
-                   WHERE
-                       id_Fournisseur = :FournisseurRecupere.id_Fournisseur
-               end-exec
+           if raison_sociale of FournisseurRecupere <> raison_sociale of ModifFournisseurInput 
+           or siret of FournisseurRecupere <> siret of ModifFournisseurInput
+           or adresse of FournisseurRecupere <> adresse of ModifFournisseurInput
+           or cp of FournisseurRecupere <> cp of ModifFournisseurInput
+           or ville of FournisseurRecupere <> ville of ModifFournisseurInput
+           or pays of FournisseurRecupere <> pays of ModifFournisseurInput
+           or tel of FournisseurRecupere <> tel of ModifFournisseurInput then
+               move "M" to ChoixModifFournisseur
+               display EffaceLigne5
+               display Ligne-ChoixFournisseurModifie
+               accept ChoixModifFournisseur line 5 col 45 reverse-video
+               if ChoixModifFournisseur = "M" or ChoixModifFournisseur = "m"
+                   exec sql
+                   UPDATE Fournisseur
+                       SET raison_sociale =    :ModifFournisseurInput.raison_sociale,
+                           siret =             :ModifFournisseurInput.siret,
+                           adresse =           :ModifFournisseurInput.adresse,
+                           cp =                :ModifFournisseurInput.cp,
+                           ville =             :ModifFournisseurInput.ville,
+                           pays =              :ModifFournisseurInput.pays,
+                           tel =               :ModifFournisseurInput.tel,
+                           date_modif =        getdate()
+                       WHERE
+                           id_Fournisseur = :FournisseurRecupere.id_Fournisseur
+                   end-exec
                
-               if sqlcode equal 0
-                   move 1 to EOM
-                   display Ligne-FournisseurModifie
-                   accept Pause
+                   if sqlcode equal 0
+                       move 1 to EOM
+                       display Ligne-FournisseurModifie
+                       accept Pause
+                   end-if
                end-if
            end-if.
        SuppFournisseur.
@@ -1640,12 +1669,12 @@
            move 0 to EOSUPF.
        SuppFournisseur-trt.
            initialize FournisseurRecupere.
-           initialize SuppFournisseurInput.
            initialize VerifArticleFournisseurPresent.
+           initialize VerifFournisseurPresent.
            move 1 to EOSUPF.
            display ecran-SuppFournisseur.
-           accept raison_sociale of SuppFournisseurInput line 6 col 32.
            if raison_sociale of SuppFournisseurInput equal ' '
+               accept raison_sociale of SuppFournisseurInput line 6 col 32 prompt
                perform ChoixDuFournisseur
                move ChoixEcranFournisseur to IdFournisseurRecherche
                perform RechercheFournisseurParId
@@ -1680,7 +1709,7 @@
 
                    move "O" to ChoixSupprimerFournisseur
                    display Ligne-DemandeSuppression
-                   accept ChoixSupprimerFournisseur line 5 col 63
+                   accept ChoixSupprimerFournisseur line 5 col 63 reverse-video
 
                    if ChoixSupprimerFournisseur = "O" or ChoixSupprimerFournisseur = "o"
                        exec sql
@@ -2148,7 +2177,7 @@
 
                Display " Page [S]uivante - [m]enu : S" Line 1 Col 1 with no advancing
                Move "S" to responseChoixFournisseur
-               accept responseChoixFournisseur line 1 col 29
+               accept responseChoixFournisseur line 1 col 29 reverse-video
 
                if responseChoixFournisseur = "M" or responseChoixFournisseur = "m"
                    move 1 to EOCF
