@@ -72,6 +72,7 @@
 
        77 ChoixAjoutFournisseur pic x.
        77 ChoixModifFournisseur pic x.
+       77 ChoixSupprimerFournisseur pic x.
        77 ChoixCreationFournisseur PIC X.
 
        77 ChoixChampObligatoire pic x.
@@ -164,6 +165,16 @@
          10 ville sql char-varying (50).
          10 pays sql char-varying (50).
          10 tel sql char-varying (15).
+
+       01 SuppFournisseurInput.
+         10 id_fournisseur pic 9(5).
+         10 raison_sociale sql char-varying (50).
+         10 siret sql char (14).
+         10 adresse sql char-varying (50).
+         10 cp sql char (5).
+         10 ville sql char-varying (50).
+         10 pays sql char-varying (50).
+         10 tel sql char-varying (15).
         
        01 FournisseurRecupere.
          10 id_fournisseur pic 9(5).
@@ -216,6 +227,7 @@
 
        77 VerifArticlePresent pic 9.
        77 VerifFournisseurPresent pic 9.
+       77 VerifArticleFournisseurPresent pic 9.
        77 IdFournisseurRecherche pic 9(5).
 
        77 NoLigneArticle pic 99.
@@ -244,6 +256,7 @@
        77 EOM pic 9.
        77 EOMF pic 9.
        77 EOSUP pic 9.
+       77 EOSUPF pic 9.
        77 noPageEtatStock pic 999.
        77 nbLigneEtatStock pic 99.
        77 MaxLigneEtatStock PIC 99 VALUE 33.
@@ -479,7 +492,7 @@
          10 line 17 col 15 VALUE "0. Quitter".
 
        01 ligne-MenuCommandeErreur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
-         10 line 6 col 7 VALUE "Le programme s'est arrete sans modifier la base de donnee car:" reverse-video.
+         10 line 6 col 7 VALUE "Le programme s'est arrete sans modifier la base de donnees car:" reverse-video.
          10 line 7 col 7 pic x(80) from MessageErreurCommande.
          10 line 17 col 15 value "          ".
 
@@ -626,7 +639,7 @@
          10 line 5 col 10 value "Le stock doit etre a zero pour supprimer un article.".
 
        01 Ligne-AlerteArticlePresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 10 value "Cet article est deja present en base de donnee.".
+         10 line 5 col 10 value "Cet article est deja present en base de donnees.".
 
        01 Ligne-AnnulationAjoutArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 15 value "L article n a pas ete ajoute.".
@@ -677,6 +690,28 @@
          10 line 11 col 32 using pays of ModifFournisseurInput.
          10 line 12 col 15 value "No Tel ....... : ".
          10 line 12 col 32 using tel of ModifFournisseurInput.
+
+      *************************************************************
+      *   SUPPRIMER FOURNISSEUR
+      *************************************************************
+
+       01 ecran-SuppFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "SUPPRIMER UN FOURNISSEUR".
+         10 line 6 col 15 value "Raison Sociale : ".
+         10 line 6 col 32 using raison_sociale of SuppFournisseurInput.
+         10 line 7 col 15 value "SIRET ........ : ".
+         10 line 7 col 32 using siret of SuppFournisseurInput.
+         10 line 8 col 15 value "Adresse ...... : ".
+         10 line 8 col 32 using adresse of SuppFournisseurInput.
+         10 line 9 col 15 value "Code Postal .. : ".
+         10 line 9 col 32 using cp of SuppFournisseurInput.
+         10 line 10 col 15 value "Ville ........ : ".
+         10 line 10 col 32 using ville of SuppFournisseurInput.
+         10 line 11 col 15 value "Pays ......... : ".
+         10 line 11 col 32 using pays of SuppFournisseurInput.
+         10 line 12 col 15 value "No Tel ....... : ".
+         10 line 12 col 32 using tel of SuppFournisseurInput.
          
       ************ Lignes d'affichage Fournisseur ***************
        01 Ligne-FournisseurAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
@@ -685,14 +720,26 @@
        01 Ligne-FournisseurModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 1 pic x(80) value "                      Fournisseur Modifie".
 
+       01 Ligne-FournisseurSupprime background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 1 pic x(80) value "                      Fournisseur Supprime".
+
+       01 Ligne-SelectionFournisseur background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Selectionnez le fournisseur (00 pour quitter)".
+
        01 Ligne-ChoixFournisseurModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 20 value "[M]odifier - [R]evenir : ".
 
        01 Ligne-AlerteFournisseurPresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-         10 line 5 col 10 value "Ce fournisseur est deja present en base de donnee.".
+         10 line 5 col 10 value "Ce fournisseur est deja present en base de donnees.".
+
+       01 Ligne-AlerteArticleFournisseurPresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Ce fournisseur a encore des articles en base de donnees.".
 
        01 Ligne-AlerteFournisseurAbsent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Ce fournisseur n'existe pas, voulez-vous le creer ? ".
+
+       01 Ligne-AlerteSuppFournisseurAbsent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Ce fournisseur n'existe pas.".
 
        01 Ligne-ChampRaisonSocialeObligatoire reverse-video.
          10 line 5 col 10 value "Le champ Raison Sociale est obligatoire." bell.
@@ -729,7 +776,7 @@
 
            if (sqlcode not equal 0)
              then
-               display "Erreur connexion base de donnee" line 4 col 15
+               display "Erreur connexion base de donnees" line 4 col 15
                stop run
            end-if.
 
@@ -1130,7 +1177,7 @@
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOCA
-               display " Selectionnez l article (0 pour retour) " line 5 col 10 reverse-video
+               display Ligne-SelectionFournisseur
                accept ChoixEcranArticle line 5 col 77
 
            else
@@ -1318,6 +1365,9 @@
                    perform AjoutFournisseur
                when 3
                    perform ModifFournisseur
+               when 4
+                   perform SuppFournisseur
+
            end-evaluate.
        MenuFournisseur-fin.
            continue.
@@ -1404,7 +1454,7 @@
            display ecran-AjoutFournisseur.
 
            if ChoixAjoutFournisseur = "a" or ChoixAjoutFournisseur = "A"
-      *    On verifie si le fournisseur est deja dans la base de donnee
+      *    On verifie si le fournisseur est deja dans la base de donnees
                exec sql
                    SELECT COUNT(*) INTO :VerifFournisseurPresent
                    FROM Fournisseur
@@ -1582,7 +1632,96 @@
                    accept Pause
                end-if
            end-if.
-           
+       SuppFournisseur.
+           perform SuppFournisseur-init
+           perform SuppFournisseur-trt until EOSUPF = 1.
+           perform SuppFournisseur-fin.
+       SuppFournisseur-init.
+           move 0 to EOSUPF.
+       SuppFournisseur-trt.
+           initialize FournisseurRecupere.
+           initialize SuppFournisseurInput.
+           initialize VerifArticleFournisseurPresent.
+           move 1 to EOSUPF.
+           display ecran-SuppFournisseur.
+           accept raison_sociale of SuppFournisseurInput line 6 col 32.
+           if raison_sociale of SuppFournisseurInput equal ' '
+               perform ChoixDuFournisseur
+               move ChoixEcranFournisseur to IdFournisseurRecherche
+               perform RechercheFournisseurParId
+               initialize IdFournisseurRecherche
+           else
+               move raison_sociale of SuppFournisseurInput to RaisonSocialeFournisseurRecherche
+               perform RechercheFournisseurParNom
+               initialize RaisonSocialeFournisseurRecherche
+           end-if.
+
+           if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' ' or raison_sociale of SuppFournisseurInput <> ' '
+               exec sql
+                   SELECT COUNT(*) INTO :VerifFournisseurPresent
+                   FROM Fournisseur
+                   WHERE raison_sociale = :SuppFournisseurInput.raison_sociale
+                   OR    raison_sociale = :FournisseurRecupere.raison_sociale
+               end-exec
+               if VerifFournisseurPresent <> 0
+                   move raison_sociale of SuppFournisseurInput to RaisonSocialeFournisseurRecherche
+                   perform RechercheFournisseurParNom
+                   initialize RaisonSocialeFournisseurRecherche
+
+                   move raison_sociale of FournisseurRecupere to raison_sociale of SuppFournisseurInput
+                   move siret of FournisseurRecupere to siret of SuppFournisseurInput
+                   move adresse of FournisseurRecupere to adresse of SuppFournisseurInput
+                   move cp of FournisseurRecupere to cp of SuppFournisseurInput
+                   move ville of FournisseurRecupere to ville of SuppFournisseurInput
+                   move pays of FournisseurRecupere to pays of SuppFournisseurInput
+                   move tel of FournisseurRecupere to tel of SuppFournisseurInput
+
+                   display ecran-SuppFournisseur
+
+                   move "O" to ChoixSupprimerFournisseur
+                   display Ligne-DemandeSuppression
+                   accept ChoixSupprimerFournisseur line 5 col 63
+
+                   if ChoixSupprimerFournisseur = "O" or ChoixSupprimerFournisseur = "o"
+                       exec sql
+                           SELECT COUNT(*) INTO :VerifArticleFournisseurPresent
+                           FROM Article
+                           WHERE id_fournisseur = :FournisseurRecupere.id_fournisseur
+                       end-exec
+                       if VerifArticleFournisseurPresent equal 0
+                           perform SuppFournisseurBDD
+                       else
+                           move 1 to EOSUPF
+                           display Ligne-AlerteArticleFournisseurPresent
+                           accept Pause line 1 col 1
+                       end-if
+                   else
+                       move 1 to EOSUPF
+                   end-if
+               else
+                   display Ligne-AlerteSuppFournisseurAbsent
+                   accept Pause
+               end-if
+           else
+              continue
+           end-if.
+       SuppFournisseur-fin.
+           initialize FournisseurRecupere.
+       SuppFournisseurBDD.
+           exec sql
+               DELETE FROM Fournisseur
+               WHERE id_fournisseur = :FournisseurRecupere.id_fournisseur
+           end-exec.
+           if sqlcode = 0
+               move 1 to EOSUPF
+               initialize FournisseurRecupere
+               initialize SuppFournisseurInput
+               display ecran-SuppFournisseur
+               display EffaceLigne5
+               display Ligne-FournisseurSupprime
+               accept Pause line 1 col 1
+           end-if.
+
       *************************************************************
       *************************************************************
       * Gestion menu commande
@@ -1987,7 +2126,7 @@
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
 
                move 1 to EOCF
-               display "Selectionnez le fournisseur" line 5 col 10 reverse-video
+               display Ligne-SelectionFournisseur
                accept ChoixEcranFournisseur line 5 col 77
               
            else
