@@ -233,6 +233,9 @@
            10 Ecran-QuantiteMin pic 9(5).
            10 FournisseurChoisi pic X(50).
 
+       77 IdModifFournisseur pic 9(5).
+       77 IdSuppFournisseur pic 9(5).
+
        77 LibelleArticleRecherche pic X(50).
        77 RaisonSocialeFournisseurRecherche pic X(50).
        77 IdArticleRecherche pic 99.
@@ -431,7 +434,7 @@
       ************************************************************
       * Param�trage couleur �cran
       ************************************************************
-       77 CouleurFondEcran PIC 99 VALUE 7.
+       77 CouleurFondEcran PIC 99 VALUE 3.
        77 CouleurCaractere PIC 99 VALUE 0.
 
       ************************************************************
@@ -1442,15 +1445,15 @@
            move "R" to ChoixDetailFournisseur
            display ecran-DetailFournisseur.
            display Ligne-ChoixDetailFournisseur
-           accept ChoixDetailFournisseur line 5 col 47 reverse-video.
+           accept ChoixDetailFournisseur line 5 col 47 reverse-video auto.
            evaluate ChoixDetailFournisseur
                when "M"
                when "m"
-                   move raison_sociale of DetailFournisseurInput to raison_sociale of ModifFournisseurInput
+                   move id_fournisseur of FournisseurRecupere to IdModifFournisseur
                    perform ModifFournisseur
                when "S"
                when "s"
-                   move raison_sociale of DetailFournisseurInput to raison_sociale of SuppFournisseurInput
+                   move id_fournisseur of FournisseurRecupere to IdSuppFournisseur
                    perform SuppFournisseur
                when other
                    continue
@@ -1480,8 +1483,6 @@
                        INSERT INTO Fournisseur (raison_sociale, siret, adresse, cp, ville, pays, tel)
                        VALUES (:AjoutFournisseurInput.raison_sociale, :AjoutFournisseurInput.siret, :AjoutFournisseurInput.adresse, :AjoutFournisseurInput.cp, :AjoutFournisseurInput.ville, :AjoutFournisseurInput.pays, :AjoutFournisseurInput.tel)
                    end-exec
-
-                   display Fournisseur
                    display Ligne-FournisseurAjoute
                    move 1 to EOAF
                    accept Pause
@@ -1539,18 +1540,26 @@
        ModifFournisseur-trt.
            move 1 to EOMF.
            initialize FournisseurRecupere.
+           initialize ModifFournisseurInput.
            display ecran-ModifFournisseur.
 
-           if raison_sociale of ModifFournisseurInput equal ' '
-               accept raison_sociale of ModifFournisseurInput line 6 col 32
-               perform ChoixDuFournisseur
-               move ChoixEcranFournisseur to IdFournisseurRecherche
+           if IdModifFournisseur <> 0
+               move IdModifFournisseur to IdFournisseurRecherche
+               initialize IdModifFournisseur
                perform RechercheFournisseurParId
                initialize IdFournisseurRecherche
            else
-               move raison_sociale of ModifFournisseurInput to RaisonSocialeFournisseurRecherche
-               perform RechercheFournisseurParNom
-               initialize RaisonSocialeFournisseurRecherche
+               accept raison_sociale of ModifFournisseurInput line 6 col 32 prompt
+               if raison_sociale of ModifFournisseurInput not equal ' '
+                   move raison_sociale of ModifFournisseurInput to RaisonSocialeFournisseurRecherche
+                   perform RechercheFournisseurParNom
+                   initialize RaisonSocialeFournisseurRecherche
+               else
+                   perform ChoixDuFournisseur
+                   move ChoixEcranFournisseur to IdFournisseurRecherche
+                   perform RechercheFournisseurParId
+                   initialize IdFournisseurRecherche
+               end-if
            end-if.
 
            if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' ' or raison_sociale of ModifFournisseurInput <> ' '
@@ -1671,19 +1680,31 @@
            initialize FournisseurRecupere.
            initialize VerifArticleFournisseurPresent.
            initialize VerifFournisseurPresent.
+           initialize SuppFournisseurInput
+           initialize ChoixEcranFournisseur
            move 1 to EOSUPF.
            display ecran-SuppFournisseur.
-           if raison_sociale of SuppFournisseurInput equal ' '
-               accept raison_sociale of SuppFournisseurInput line 6 col 32 prompt
-               perform ChoixDuFournisseur
-               move ChoixEcranFournisseur to IdFournisseurRecherche
+
+           if IdSuppFournisseur <> 0
+               move IdSuppFournisseur to IdFournisseurRecherche
+               initialize IdSuppFournisseur
                perform RechercheFournisseurParId
                initialize IdFournisseurRecherche
            else
-               move raison_sociale of SuppFournisseurInput to RaisonSocialeFournisseurRecherche
-               perform RechercheFournisseurParNom
-               initialize RaisonSocialeFournisseurRecherche
+               accept raison_sociale of SuppFournisseurInput line 6 col 32 prompt
+               if raison_sociale of SuppFournisseurInput not equal ' '
+                   move raison_sociale of SuppFournisseurInput to RaisonSocialeFournisseurRecherche
+                   perform RechercheFournisseurParNom
+                   initialize RaisonSocialeFournisseurRecherche
+               else
+                   perform ChoixDuFournisseur
+                   move ChoixEcranFournisseur to IdFournisseurRecherche
+                   perform RechercheFournisseurParId
+                   initialize IdFournisseurRecherche
+               end-if
            end-if.
+
+
 
            if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' ' or raison_sociale of SuppFournisseurInput <> ' '
                exec sql
@@ -1709,7 +1730,7 @@
 
                    move "O" to ChoixSupprimerFournisseur
                    display Ligne-DemandeSuppression
-                   accept ChoixSupprimerFournisseur line 5 col 63 reverse-video
+                   accept ChoixSupprimerFournisseur line 5 col 62 reverse-video
 
                    if ChoixSupprimerFournisseur = "O" or ChoixSupprimerFournisseur = "o"
                        exec sql
