@@ -1143,11 +1143,13 @@
                        accept quantite_mediane of ModifArticleInput line 9 col 32 prompt
 
                        accept raison_sociale of ModifArticleInput line 10 col 32 prompt
-                       if raison_sociale of AjoutArticleInput equal ' '
+                       if raison_sociale of ModifArticleInput equal ' '
                            perform ChoixDuFournisseur
                            move ChoixEcranFournisseur to IdFournisseurRecherche
                            perform RechercheFournisseurParId
                            initialize IdFournisseurRecherche
+                           move raison_sociale of FournisseurRecupere to raison_sociale of ModifArticleInput
+                           move id_fournisseur of FournisseurRecupere to id_fournisseur of ModifArticleInput
                        end-if
                        if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere or ChoixEcranFournisseur <> 0
                            exec sql
@@ -1183,6 +1185,9 @@
                                        display Ligne-AlerteErreurBDD
                                    end-if
                                end-if
+                           else
+                               display ecran-ModifArticle
+                               perform ModifArticleBDD
                            end-if
                        else
                            exec sql
@@ -1233,6 +1238,8 @@
                    display Ligne-ArticleModifie
                    accept Pause
                end-if
+           else
+               move 0 to EOM
            end-if.
        SuppArticle.
            perform SuppArticle-init
@@ -2370,8 +2377,16 @@
        RechercheFournisseurParId.
            exec sql
               SELECT id_fournisseur, raison_sociale, siret, adresse, cp, ville, pays, tel, date_crea, date_modif
-              INTO :FournisseurRecupere.id_fournisseur, :FournisseurRecupere.raison_sociale, :FournisseurRecupere.siret,
-                                :FournisseurRecupere.adresse, :FournisseurRecupere.cp, :FournisseurRecupere.ville, :FournisseurRecupere.pays, :FournisseurRecupere.tel, :FournisseurRecupere.date_crea, :FournisseurRecupere.date_modif
+              INTO :FournisseurRecupere.id_fournisseur,
+                   :FournisseurRecupere.raison_sociale,
+                   :FournisseurRecupere.siret,
+                   :FournisseurRecupere.adresse,
+                   :FournisseurRecupere.cp,
+                   :FournisseurRecupere.ville,
+                   :FournisseurRecupere.pays,
+                   :FournisseurRecupere.tel,
+                   :FournisseurRecupere.date_crea,
+                   :FournisseurRecupere.date_modif
               FROM Fournisseur
               WHERE id_fournisseur = :IdFournisseurRecherche
           end-exec.
