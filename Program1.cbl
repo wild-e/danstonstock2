@@ -614,14 +614,16 @@
        01 ecran-ModifArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "MODIFIER UN ARTICLE".
-         10 line 6 col 15 value "Libelle ... : ".
-         10 line 6 col 29 using libelle of ModifArticleInput.
-         10 line 7 col 15 value "Stock ..... : ".
-         10 line 7 col 29 using quantite_stock of ModifArticleInput.
-         10 line 8 col 15 value "Stock min . : ".
-         10 line 8 col 29 using quantite_min of ModifArticleInput.
-         10 line 9 col 15 value "Fournisseur : ".
-         10 line 9 col 29 using raison_sociale of ModifArticleInput.
+         10 line 6 col 15 value "Libelle ...... : ".
+         10 line 6 col 32 using libelle of ModifArticleInput.
+         10 line 7 col 15 value "Stock ........ : ".
+         10 line 7 col 32 using quantite_stock of ModifArticleInput.
+         10 line 8 col 15 value "Stock min .... : ".
+         10 line 8 col 32 using quantite_min of ModifArticleInput.
+         10 line 9 col 15 value "Qtt Mediane .. : ".
+         10 line 9 col 32 using quantite_mediane of ModifArticleInput.
+         10 line 10 col 15 value "Fournisseur  : ".
+         10 line 10 col 32 using raison_sociale of ModifArticleInput.
 
       *************************************************************
       *   SUPPRESSION ARTICLE
@@ -663,6 +665,9 @@
 
        01 Ligne-AlerteArticlePresent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Cet article est deja present en base de donnees.".
+
+       01 Ligne-AlerteArticleAbsent background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Cet article n'existe pas.".
 
        01 Ligne-AnnulationAjoutArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 15 value "L article n a pas ete ajoute.".
@@ -1090,93 +1095,136 @@
            initialize ArticleRecupere.
            initialize ModifArticleInput.
            display ecran-ModifArticle.
-           accept libelle of ModifArticleInput line 6 col 29.
-
-           if libelle of ModifArticleInput equal ' '
-               perform ChoixArticle
-               move ChoixEcranArticle to IdArticleRecherche
+      *    On controle si l arrivee dans le paragraphe se fait via le menu ou via les details de l article.
+           if IdModifArticle <> 0
+      *    Si par les details, on recherche l article avec l ID
+               move IdModifArticle to IdArticleRecherche
+               initialize IdModifArticle
                perform RechercheArticleParId
                initialize IdArticleRecherche
            else
-               move libelle of ModifArticleInput to LibelleArticleRecherche
-               perform RechercheArticleParNom
-               initialize LibelleArticleRecherche
+      *    Sinon on accept le libelle et on recherche par le nom
+               accept libelle of ModifArticleInput line 6 col 32 prompt
+               if libelle of ModifArticleInput not equal ' '
+                   move libelle of ModifArticleInput to LibelleArticleRecherche
+                   perform RechercheArticleParNom
+                   initialize LibelleArticleRecherche
+               else
+      *    Si le champ est vide on selectionne le produit dans la liste des produits
+                   perform ChoixArticle
+                   move ChoixEcranArticle to IdArticleRecherche
+                   perform RechercheArticleParId
+                   initialize IdArticleRecherche
+               end-if
            end-if.
-
-          
-           move libelle of ArticleRecupere to libelle of ModifArticleInput.
-           move quantite_stock of ArticleRecupere to quantite_stock of ModifArticleInput.
-           move quantite_min of ArticleRecupere to quantite_min of ModifArticleInput.
-           move raison_sociale of ArticleRecupere to raison_sociale of ModifArticleInput.
-
-           display ecran-ModifArticle.
-
-           accept libelle of ModifArticleInput line 6 col 29 .
-           accept quantite_stock of ModifArticleInput line 7 col 29.
-           accept quantite_min of ModifArticleInput line 8 col 29.
-           accept raison_sociale of ModifArticleInput line 9 col 29.
-      *    On vérifie si l'article modifié est déjà en base de données
-           exec sql
-               SELECT COUNT(*) INTO :VerifArticlePresent
-               FROM Article
-               WHERE Article.Libelle = :ModifArticleInput.libelle
-           end-exec
-           if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere
+      *    On vérifie si l 'article a modifié est déjà en base de données
+           if ChoixEcranArticle <> 0 or libelle of ArticleRecupere <> ' ' or libelle of ModifArticleInput <> ' '
                exec sql
-                 SELECT COUNT(*) INTO :VerifFournisseurPresent
-                 FROM Fournisseur
-                 WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                   SELECT COUNT(*) INTO :VerifArticlePresent
+                   FROM Article
+                   WHERE Article.Libelle = :ModifArticleInput.libelle
+                   OR    Article.Libelle = :ArticleRecupere.libelle
                end-exec
-               if VerifFournisseurPresent equal 0
-                   display Ligne-AlerteFournisseurAbsent
-                   move "O" to ChoixCreationFournisseur
-                   accept ChoixCreationFournisseur line 5 col 60
+      *        S il est present on affiche ses infos et on accept les modifications
+               if VerifArticlePresent <> 0
+                   move libelle of ArticleRecupere to libelle of ModifArticleInput
+                   move quantite_stock of ArticleRecupere to quantite_stock of ModifArticleInput
+                   move quantite_min of ArticleRecupere to quantite_min of ModifArticleInput
+                   move quantite_mediane of ArticleRecupere to quantite_mediane of ModifArticleInput
+                   move raison_sociale of ArticleRecupere to raison_sociale of ModifArticleInput
 
-                   if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
-                       exec sql
-                         INSERT INTO Fournisseur(raison_sociale)
-                         VALUES (:ModifArticleInput.raison_sociale)
-                       end-exec
-                       if sqlcode equal 0
-                           display Ligne-FournisseurAjoute
-                           accept Pause
+                   display ecran-ModifArticle
+
+                   accept libelle of ModifArticleInput line 6 col 32 prompt
+                   if libelle of ModifArticleInput not equal ' '
+                  
+                       accept quantite_stock of ModifArticleInput line 7 col 32 prompt
+                       accept quantite_min of ModifArticleInput line 8 col 32 prompt
+                       accept quantite_mediane of ModifArticleInput line 9 col 32 prompt
+
+                       accept raison_sociale of ModifArticleInput line 10 col 32 prompt
+                       if raison_sociale of AjoutArticleInput equal ' '
+                           perform ChoixDuFournisseur
+                           move ChoixEcranFournisseur to IdFournisseurRecherche
+                           perform RechercheFournisseurParId
+                           initialize IdFournisseurRecherche
+                       end-if
+                       if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere or ChoixEcranFournisseur <> 0
                            exec sql
-                             SELECT id_fournisseur into :ModifArticleInput.id_fournisseur
-                             FROM Fournisseur
-                             WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                               SELECT COUNT(*) INTO :VerifFournisseurPresent
+                               FROM Fournisseur
+                               WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                               OR id_fournisseur = :ChoixEcranFournisseur
                            end-exec
-                           display id_fournisseur of ModifArticleInput
+                           if VerifFournisseurPresent equal 0
+                               display Ligne-AlerteFournisseurAbsent
+                               move "O" to ChoixCreationFournisseur
+                               accept ChoixCreationFournisseur line 5 col 60
+
+                               if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
+                                   exec sql
+                                       INSERT INTO Fournisseur(raison_sociale)
+                                       VALUES (:ModifArticleInput.raison_sociale)
+                                   end-exec
+                                   if sqlcode equal 0
+                                       display Ligne-FournisseurAjoute
+                                       accept Pause
+                                       exec sql
+                                           SELECT id_fournisseur into :ModifArticleInput.id_fournisseur
+                                           FROM Fournisseur
+                                           WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                                       end-exec
+                                       if sqlcode equal 0
+                                           perform ModifArticleBDD
+                                       else
+                                           display Ligne-AlerteErreurBDD
+                                       end-if
+                                   else
+                                       display Ligne-AlerteErreurBDD
+                                   end-if
+                               end-if
+                           end-if
+                       else
+                           exec sql
+                               SELECT id_fournisseur INTO :ModifArticleInput.id_fournisseur
+                               FROM Fournisseur
+                               WHERE raison_sociale = : ModifArticleInput.raison_sociale
+                           end-exec
                            perform ModifArticleBDD
                        end-if
+                   else
+                       move "Q" to ChoixChampObligatoire
+                       display Ligne-ChampObligatoire
+                       accept ChoixChampObligatoire line 5 col 59 reverse-video
+                       if ChoixChampObligatoire = "Q" or ChoixChampObligatoire = "q"
+                           move 1 to EOM
+                       else
+                           move 0 to EOM
+                       end-if
                    end-if
+               else
+                   display Ligne-AlerteArticleAbsent
+                   accept Pause
                end-if
            else
-               exec sql
-                   SELECT id_fournisseur INTO :ModifArticleInput.id_fournisseur
-                   FROM Fournisseur
-                   WHERE raison_sociale = : ModifArticleInput.raison_sociale
-               end-exec
-               perform ModifArticleBDD
+               continue
            end-if.
-          
        ModifArticle-fin.
            continue.
        ModifArticleBDD.
            move "M" to ChoixModifArticle.
            display EffaceLigne5.
            display Ligne-ChoixArticleModifie.
-           accept ChoixModifArticle line 5 col 47.
+           accept ChoixModifArticle line 5 col 45 reverse-video.
            if ChoixModifArticle = "M" or ChoixModifArticle = "m"
-               display code_article of ArticleRecupere
-               display id_fournisseur of ModifArticleInput
-
                exec sql
                    UPDATE Article
-                   SET libelle =           :ModifArticleInput.libelle,
-                       id_fournisseur =    :ModifArticleInput.id_fournisseur,
-                       quantite_stock =    :ModifArticleInput.quantite_stock,
-                       quantite_min =      :ModifArticleInput.quantite_min,
-                       date_modif =        getdate()
+                   SET libelle          =  :ModifArticleInput.libelle,
+                       id_fournisseur   =  :ModifArticleInput.id_fournisseur,
+                       quantite_stock   =  :ModifArticleInput.quantite_stock,
+                       quantite_min     =  :ModifArticleInput.quantite_min,
+                       quantite_mediane =  :ModifArticleInput.quantite_mediane,
+                       date_modif       =  getdate()
                    WHERE
                        code_article = :ArticleRecupere.code_article
                end-exec
