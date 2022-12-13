@@ -632,14 +632,16 @@
        01 ecran-SuppArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "SUPPRIMER UN ARTICLE".
-         10 line 6 col 15 value "Libelle : ".
-         10 line 6 col 25 using libelle of SuppArticleInput.
-         10 line 7 col 15 value "Stock : ".
-         10 line 7 col 23 using quantite_stock of SuppArticleInput.
-         10 line 8 col 15 value "Stock minimal : ".
-         10 line 8 col 31 using quantite_min of SuppArticleInput.
-         10 line 9 col 15 value "Fournisseur : ".
-         10 line 9 col 29 using raison_sociale of SuppArticleInput.
+         10 line 6 col 15 value "Libelle ........ : ".
+         10 line 6 col 32 using libelle of SuppArticleInput.
+         10 line 7 col 15 value "Stock .......... : ".
+         10 line 7 col 32 using quantite_stock of SuppArticleInput.
+         10 line 8 col 15 value "Stock minimal .. : ".
+         10 line 8 col 32 using quantite_min of SuppArticleInput.
+         10 line 9 col 15 value "Stock median ... : ".
+         10 line 9 col 32 using quantite_min of SuppArticleInput.
+         10 line 10 col 15 value "Fournisseur .... : ".
+         10 line 10 col 32 using raison_sociale of SuppArticleInput.
 
       ************ Lignes d'affichage Article
        01 Ligne-ChoixDetailArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
@@ -1250,43 +1252,62 @@
        SuppArticle-trt.
            initialize ArticleRecupere.
            initialize SuppArticleInput.
+           initialize ChoixEcranArticle.
            move 1 to EOSUP.
            display ecran-SuppArticle.
-           accept libelle of SuppArticleInput line 6 col 29.
 
-           move libelle of SuppArticleInput to LibelleArticleRecherche.
-           perform RechercheArticleParNom.
-           initialize LibelleArticleRecherche.
-
-           move libelle of ArticleRecupere to libelle of SuppArticleInput.
-           move quantite_stock of ArticleRecupere to quantite_stock of SuppArticleInput.
-           move quantite_min of ArticleRecupere to quantite_min of SuppArticleInput.
-           move raison_sociale of ArticleRecupere to raison_sociale of SuppArticleInput.
-
-           display ecran-SuppArticle.
-
-           move "O" to ChoixSupprimerArticle.
-           display Ligne-DemandeSuppression.
-           accept ChoixSupprimerArticle line 5 col 63.
-
-           if ChoixSupprimerArticle = "O" or ChoixSupprimerArticle = "o"
-               if quantite_stock of ArticleRecupere equal 0
-                   exec sql
-                     DELETE FROM Article
-                     WHERE code_article = :ArticleRecupere.code_article
-                   end-exec
-                   initialize ArticleRecupere
-                   initialize SuppArticleInput
-                   display ecran-SuppArticle
-                   display EffaceLigne5
-                   display Ligne-ArticleSupprime
-                   accept Pause line 1 col 1
+           if IdSuppArticle <> 0
+               move IdSuppArticle to IdArticleRecherche
+               initialize IdSuppArticle
+               perform RechercheArticleParId
+               initialize IdArticleRecherche
+           else
+               accept libelle of SuppArticleInput line 6 col 32 prompt
+               if libelle of SuppArticleInput not equal ' '
+                   move libelle of SuppArticleInput to LibelleArticleRecherche
+                   perform RechercheArticleParNom
+                   initialize LibelleArticleRecherche
                else
-                   display Ligne-AlerteStock
-                   accept Pause line 1 col 1
+                   perform ChoixArticle
+                   move ChoixEcranArticle to IdArticleRecherche
+                   perform RechercheArticleParId
+                   initialize IdArticleRecherche
+               end-if
+           end-if.
+           if ChoixEcranArticle <> 0 or libelle of ArticleRecupere <> ' ' or libelle of SuppArticleInput <> ' '
+               move libelle of ArticleRecupere to libelle of SuppArticleInput
+               move quantite_stock of ArticleRecupere to quantite_stock of SuppArticleInput
+               move quantite_min of ArticleRecupere to quantite_min of SuppArticleInput
+               move quantite_mediane of ArticleRecupere to quantite_mediane of SuppArticleInput
+               move raison_sociale of ArticleRecupere to raison_sociale of SuppArticleInput
+
+               display ecran-SuppArticle
+
+               move "O" to ChoixSupprimerArticle
+               display Ligne-DemandeSuppression
+               accept ChoixSupprimerArticle line 5 col 62 reverse-video
+
+               if ChoixSupprimerArticle = "O" or ChoixSupprimerArticle = "o"
+                   if quantite_stock of ArticleRecupere equal 0
+                       exec sql
+                         DELETE FROM Article
+                         WHERE code_article = :ArticleRecupere.code_article
+                       end-exec
+                       initialize ArticleRecupere
+                       initialize SuppArticleInput
+                       display ecran-SuppArticle
+                       display EffaceLigne5
+                       display Ligne-ArticleSupprime
+                       accept Pause line 1 col 1
+                    else
+                       display Ligne-AlerteStock
+                       accept Pause line 1 col 1
+                   end-if
+               else
+                   move 1 to EOSUP
                end-if
            else
-               move 0 to EOSUP
+               continue
            end-if.
        SuppArticle-fin.
            initialize ArticleRecupere.
