@@ -1994,7 +1994,6 @@
 
       *    On vérifie que la ligne article est conforme
            perform UnstringEnregistrementCommande.
-
            if (code_article of Commande equal low-value
                or code_article of Commande equal zero
                or quantite of Commande equal low-value
