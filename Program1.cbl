@@ -1153,8 +1153,12 @@
                            initialize IdFournisseurRecherche
                            move raison_sociale of FournisseurRecupere to raison_sociale of ModifArticleInput
                            move id_fournisseur of FournisseurRecupere to id_fournisseur of ModifArticleInput
+                       else
+                           move raison_sociale of ModifArticleInput to RaisonSocialeFournisseurRecherche
+                           perform RechercheFournisseurParNom 
+                           initialize RaisonSocialeFournisseurRecherche
                        end-if
-                       if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere
+                       if raison_sociale of ModifArticleInput <> raison_sociale of FournisseurRecupere
                            exec sql
                                SELECT COUNT(*) INTO :VerifFournisseurPresent
                                FROM Fournisseur
@@ -1198,6 +1202,7 @@
                            else
                                display EffaceLigne5
                                display Ligne-ChampRaisonSocialeObligatoire
+                               accept Pause
                            end-if
                        else
                            if raison_sociale of ModifArticleInput <> ' '
