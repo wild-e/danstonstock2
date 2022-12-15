@@ -4,18 +4,18 @@
        environment division.
        input-output section.
        file-control.
-           select f-fichierCommande1 assign to "E:\Emma\DUGS\fichierCommande1.csv"
+           select f-fichierCommande1 assign to "C:\Emma\DUGS\fichierCommande1.csv"
            organization is line sequential.
-           select f-fichierCommande2 assign to "E:\Emma\DUGS\fichierCommande2.csv"
+           select f-fichierCommande2 assign to "C:\Emma\DUGS\fichierCommande2.csv"
            organization is line sequential.
-           select f-fichierCommande3 assign to "E:\Emma\DUGS\fichierCommande3.csv"
+           select f-fichierCommande3 assign to "C:\Emma\DUGS\fichierCommande3.csv"
            organization is line sequential.
-           select f-fichierCommande4 assign to "E:\Emma\DUGS\fichierCommande4.csv"
+           select f-fichierCommande4 assign to "C:\Emma\DUGS\fichierCommande4.csv"
            organization is line sequential.
 
-           select f-fichierEtatStock assign to "E:\Emma\DUGS\fichierEtatStock.txt"
+           select f-fichierEtatStock assign to "C:\Emma\DUGS\fichierEtatStock.txt"
            organization is line sequential.
-           select f-fichierCommandeStockBas assign to "E:\Emma\DUGS\fichierCommandeStockBas.txt"
+           select f-fichierCommandeStockBas assign to "C:\Emma\DUGS\fichierCommandeStockBas.txt"
            organization is line sequential.
 
 
@@ -456,7 +456,7 @@
 
 
       ************************************************************
-      * Param�trage couleur �cran
+      * Parametrage couleur �cran
       ************************************************************
        77 CouleurFondEcran pic 99 VALUE 3.
        77 CouleurCaractere pic 99 VALUE 0.
@@ -591,14 +591,14 @@
            10 line 3 col 32 value "CHOIX DU FOURNISSEUR".
            10 line 5 col 68 value "Choix :".
            10 line 5 col 77 pic 99 from ChoixEcranFournisseur.
-           10 line 7 col 1 reverse-video pic X(80) VALUE " Ref     Nom".
+           10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
 
        01 ecran-ChoixArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
            10 line 1 col 1 blank screen.
            10 line 3 col 32 value "CHOIX DE L ARTICLE".
            10 line 5 col 68 value "Choix :".
            10 line 5 col 77 pic 9 from ChoixEcranArticle.
-           10 line 7 col 1 reverse-video pic X(80) VALUE " Ref     Nom".
+           10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
 
        01 LigneChoixArticle.
          05 line NoLigneChoixArticle Col 3 pic ZZZ99 from code_article of Article.
@@ -819,7 +819,7 @@
          10 line 5 col 10 value "Ce champ est obligatoire. [Q]uitter - [R]evenir : " bell.
 
        01 Ligne-AlerteErreurBDD reverse-video.
-         10 line 5 col 10 value "Erreur Base de donnees".
+         10 line 5 col 32 value "Erreur Base de donnees".
 
       
        procedure division.
@@ -982,7 +982,7 @@
                
       *    On verifie que le champ obligatoire est rempli
                if libelle of AjoutArticleInput not equal ' '
-      *        On verifie si l 'article est deja dans la base de donnees
+      *    On verifie si l 'article est deja dans la base de donnees
                    exec sql
                        SELECT COUNT(*) INTO :VerifArticlePresent
                        FROM Article
@@ -1033,9 +1033,10 @@
                        move quantite_stock of AjoutArticleInput to Ecran-QuantiteStock
                        move quantite_min of AjoutArticleInput to Ecran-QuantiteMin
                        move quantite_mediane of AjoutArticleInput to Ecran-QuantiteMed
+                       move raison_sociale of FournisseurRecupere to raison_sociale of AjoutArticleInput
+
                        if raison_sociale of AjoutArticleInput = raison_sociale of FournisseurRecupere
                            move id_fournisseur of FournisseurRecupere to id_fournisseur of AjoutArticleInput
-                           move raison_sociale of FournisseurRecupere to raison_sociale of AjoutArticleInput
                        end-if
 
                        move "A" to ChoixAjoutArticle
@@ -1153,51 +1154,69 @@
                            move raison_sociale of FournisseurRecupere to raison_sociale of ModifArticleInput
                            move id_fournisseur of FournisseurRecupere to id_fournisseur of ModifArticleInput
                        end-if
-                       if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere or ChoixEcranFournisseur <> 0
+                       if raison_sociale of ModifArticleInput <> raison_sociale of ArticleRecupere
                            exec sql
                                SELECT COUNT(*) INTO :VerifFournisseurPresent
                                FROM Fournisseur
                                WHERE raison_sociale = :ModifArticleInput.raison_sociale
                                OR id_fournisseur = :ChoixEcranFournisseur
                            end-exec
+                           display raison_sociale of ModifArticleInput
                            if VerifFournisseurPresent equal 0
-                               display Ligne-AlerteFournisseurAbsent
-                               move "O" to ChoixCreationFournisseur
-                               accept ChoixCreationFournisseur line 5 col 60
+                               if raison_sociale of ModifArticleInput <> ' '
+                                   display EffaceLigne5
+                                   display Ligne-AlerteFournisseurAbsent
+                                   move "O" to ChoixCreationFournisseur
+                                   accept ChoixCreationFournisseur line 5 col 60
 
-                               if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
-                                   exec sql
-                                       INSERT INTO Fournisseur(raison_sociale)
-                                       VALUES (:ModifArticleInput.raison_sociale)
-                                   end-exec
-                                   if sqlcode equal 0
-                                       display Ligne-FournisseurAjoute
-                                       accept Pause
+                                   if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
                                        exec sql
-                                           SELECT id_fournisseur into :ModifArticleInput.id_fournisseur
-                                           FROM Fournisseur
-                                           WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                                           INSERT INTO Fournisseur(raison_sociale)
+                                           VALUES (:ModifArticleInput.raison_sociale)
                                        end-exec
                                        if sqlcode equal 0
-                                           perform ModifArticleBDD
+                                           display Ligne-FournisseurAjoute
+                                           accept Pause
+                                           exec sql
+                                               SELECT id_fournisseur into :ModifArticleInput.id_fournisseur
+                                               FROM Fournisseur
+                                               WHERE raison_sociale = :ModifArticleInput.raison_sociale
+                                           end-exec
+                                           if sqlcode equal 0
+                                               perform ModifArticleBDD
+                                           else
+                                               display Ligne-AlerteErreurBDD
+                                           end-if
                                        else
                                            display Ligne-AlerteErreurBDD
                                        end-if
-                                   else
-                                       display Ligne-AlerteErreurBDD
                                    end-if
+                               else
+                                   display ecran-ModifArticle
+                                   perform ModifArticleBDD
                                end-if
                            else
-                               display ecran-ModifArticle
-                               perform ModifArticleBDD
+                               display EffaceLigne5
+                               display Ligne-ChampRaisonSocialeObligatoire
                            end-if
                        else
-                           exec sql
-                               SELECT id_fournisseur INTO :ModifArticleInput.id_fournisseur
-                               FROM Fournisseur
-                               WHERE raison_sociale = : ModifArticleInput.raison_sociale
-                           end-exec
-                           perform ModifArticleBDD
+                           if raison_sociale of ModifArticleInput <> ' '
+                               exec sql
+                                   SELECT id_fournisseur INTO :ModifArticleInput.id_fournisseur
+                                   FROM Fournisseur
+                                   WHERE raison_sociale = : ModifArticleInput.raison_sociale
+                               end-exec
+                               perform ModifArticleBDD
+                            else
+                               move "Q" to ChoixChampObligatoire
+                               display Ligne-ChampObligatoire
+                               accept ChoixChampObligatoire line 5 col 59 reverse-video
+                               if ChoixChampObligatoire = "Q" or ChoixChampObligatoire = "q"
+                                   move 1 to EOM
+                               else
+                                   move 0 to EOM
+                               end-if
+                           end-if
                        end-if
                    else
                        move "Q" to ChoixChampObligatoire
@@ -2220,6 +2239,7 @@
            perform ChoixArticle-fin.
        ChoixArticle-init.
            move 0 to EOCA.
+           initialize ChoixEcranArticle
            exec sql
                declare C-ListeChoixArticle cursor for
                    select code_article, libelle from Article
@@ -2276,6 +2296,7 @@
            perform ChoixFournisseur-trt until EOCF = 1.
            perform ChoixFournisseur-fin.
        ChoixFournisseur-init.
+           initialize ChoixEcranFournisseur
            move 0 to EOCF.
            exec sql
                declare C-ListeChoixFournisseur cursor for
