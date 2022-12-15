@@ -302,7 +302,8 @@
        77 noPageReapprovisionnement pic 999.
        77 nbLigneReapprovisionnement pic 99.
        77 MaxLigneReapprovisionnement pic 99 VALUE 33.
-
+       77 ecritureFichierDeCommande pic 9.
+       77 MessageComparaison pic x(80).
 
       *    Variables génération état de stock
 
@@ -537,6 +538,9 @@
        01 ligne-MenuCommandeSucces background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 6 col 7 VALUE "Commande ajoutee avec succes" reverse-video.
          10 line 17 col 15 value "          ".
+
+       01 ligne-MenuReapprovisionnement background-color is CouleurFondEcran foreground-color is CouleurCaractere.
+         10 line 6 col 7 pic x(80) from MessageComparaison.
 
       ***************************************************************
       *        DETAILS ARTICLE
@@ -1347,6 +1351,7 @@
            move 0 to EOCS.
            move 0 to nbLigneReapprovisionnement.
            move 1 to noPageReapprovisionnement.
+           move 0 to ecritureFichierDeCommande.
            initialize VueReapproArticleFournisseur.
            move space to CodeFournisseurPrecedent.
 
@@ -1378,9 +1383,19 @@
            end-exec.
            if (sqlcode not equal 0 and sqlcode not equal 1) then
                move 1 to EOCS
-               perform EcritureFichierReapprovisionnement-piedDePageFin
+               if ecritureFichierDeCommande equal 1
+                   perform EcritureFichierReapprovisionnement-piedDePageFin
+                   move "Fichier(s) de commande genere(s) - Appuyez sur entree pour continuer" to MessageComparaison
+                   display ligne-MenuReapprovisionnement
+                   accept Pause line 5 col 77
+               else
+                   move "Le stock ne necessite pas de commande - Appuyez sur entree pour continuer" to MessageComparaison
+                   display ligne-MenuReapprovisionnement
+                   accept Pause line 5 col 77
+               end-if
            else
                perform EcritureFichierReapprovisionnement
+               move 1 to ecritureFichierDeCommande
            end-if.
 
        ComparaisonStock-fin.
