@@ -475,7 +475,7 @@
          10 line 5 col 10 value "/".
          10 line 5 col 11 from Annee of DateSysteme.
          10 line 5 col 68 VALUE "Choix: ".
-         10 line 11 col 15 VALUE "1. Gestions des articles".
+         10 line 11 col 15 VALUE "1. Gestion des articles".
          10 line 12 col 15 VALUE "2. Gestion des fournisseurs".
          10 line 13 col 15 VALUE "3. Reception commande".
          10 line 17 col 15 VALUE "0. Quitter".
