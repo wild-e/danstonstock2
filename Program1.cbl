@@ -475,7 +475,7 @@
          10 line 5 col 10 value "/".
          10 line 5 col 11 from Annee of DateSysteme.
          10 line 5 col 68 VALUE "Choix: ".
-         10 line 11 col 15 VALUE "1. Gestions des articles".
+         10 line 11 col 15 VALUE "1. Gestion des articles".
          10 line 12 col 15 VALUE "2. Gestion des fournisseurs".
          10 line 13 col 15 VALUE "3. Reception commande".
          10 line 17 col 15 VALUE "0. Quitter".
@@ -486,10 +486,10 @@
          10 line 1 col 1 Blank Screen.
          10 line 3 col 32 value " Gestion des articles ".
          10 line 5 col 5 from Jour of DateSysteme.
-         10 line 5 col 8 value "/".
-         10 line 5 col 9 from Mois of DateSysteme.
-         10 line 5 col 12 value "/".
-         10 line 5 col 14 from Annee of DateSysteme.
+         10 line 5 col 7 value "/".
+         10 line 5 col 8 from Mois of DateSysteme.
+         10 line 5 col 10 value "/".
+         10 line 5 col 11 from Annee of DateSysteme.
          10 line 5 col 68 value "Choix :".
          10 line 5 col 77 pic 9 from ChoixMenuArticle.
          10 line 11 col 15 value "1. Liste des articles".
@@ -505,10 +505,10 @@
          10 line 1 col 1 Blank Screen.
          10 line 3 col 32 value " Gestion des Fournisseurs ".
          10 line 5 col 5 from Jour of DateSysteme.
-         10 line 5 col 8 value "/".
-         10 line 5 col 9 from Mois of DateSysteme.
-         10 line 5 col 12 value "/".
-         10 line 5 col 14 from Annee of DateSysteme.
+         10 line 5 col 7 value "/".
+         10 line 5 col 8 from Mois of DateSysteme.
+         10 line 5 col 10 value "/".
+         10 line 5 col 11 from Annee of DateSysteme.
          10 line 5 col 68 value "Choix :".
          10 line 5 col 77 pic 9 from ChoixMenuArticle.
          10 line 11 col 15 value "1. Liste des fournisseurs".
@@ -654,6 +654,9 @@
        01 Ligne-ChoixArticleAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 20 value "[A]jouter - [R]evenir : ".
 
+       01 Ligne-SelectionArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Selectionnez l article (00 pour quitter)".
+
        01 Ligne-ArticleAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
            10 line 5 col 1 pic x(80) value "                      Article Ajoute".
        
@@ -663,7 +666,7 @@
        01 Ligne-ChoixArticleModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 20 value "[M]odifier - [R]evenir : ".
 
-       01 Ligne-DemandeSuppression background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+       01 Ligne-DemandeSuppressionArticle background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Voulez vous supprimer cet article ? [O]ui / [N]on : ".
 
        01 Ligne-AlerteStock background-color is CouleurCaractere foreground-color is CouleurFondEcran.
@@ -796,6 +799,9 @@
 
        01 Ligne-SelectionFournisseur background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "Selectionnez le fournisseur (00 pour quitter)".
+
+       01 Ligne-DemandeSuppressionFournisseur background-color is CouleurCaractere foreground-color is CouleurFondEcran.
+         10 line 5 col 10 value "Voulez vous supprimer ce fournisseur ? [O]ui / [N]on : ".
 
        01 Ligne-ChoixFournisseurModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 20 value "[M]odifier - [R]evenir : ".
@@ -1019,10 +1025,10 @@
                                          FROM Fournisseur
                                          WHERE raison_sociale = :AjoutArticleInput.raison_sociale
                                        end-exec
-                                       if sqlcode not equal 0
-                                           display Ligne-AlerteErreurBDD
-                                           accept Pause
-                                       end-if
+                                       perform AjoutArticleBDD 
+                                    else
+                                       display Ligne-AlerteErreurBDD
+                                       accept Pause
                                    end-if
                                else
                                    move 0 to EOA
@@ -1179,9 +1185,16 @@
 
                                    if ChoixCreationFournisseur equal "O" or ChoixCreationFournisseur equal "O"
                                        exec sql
-                                           INSERT INTO Fournisseur(raison_sociale)
-                                           VALUES (:ModifArticleInput.raison_sociale)
+                                           SELECT COUNT(*) INTO :VerifFournisseurPresent
+                                           FROM Fournisseur
+                                           WHERE raison_sociale = :ModifArticleInput.raison_sociale
                                        end-exec
+                                       if VerifFournisseurPresent equal 0
+                                           exec sql
+                                               INSERT INTO Fournisseur(raison_sociale)
+                                               VALUES (:ModifArticleInput.raison_sociale)
+                                           end-exec
+                                       end-if
                                        if sqlcode equal 0
                                            display Ligne-FournisseurAjoute
                                            accept Pause
@@ -1215,6 +1228,7 @@
                                    FROM Fournisseur
                                    WHERE raison_sociale = : ModifArticleInput.raison_sociale
                                end-exec
+                               display id_fournisseur of ModifArticleInput
                                perform ModifArticleBDD
                             else
                                move "Q" to ChoixChampObligatoire
@@ -1312,7 +1326,7 @@
                display ecran-SuppArticle
 
                move "O" to ChoixSupprimerArticle
-               display Ligne-DemandeSuppression
+               display Ligne-DemandeSuppressionArticle
                accept ChoixSupprimerArticle line 5 col 62 reverse-video
 
                if ChoixSupprimerArticle = "O" or ChoixSupprimerArticle = "o"
@@ -1833,8 +1847,8 @@
                    display ecran-SuppFournisseur
 
                    move "O" to ChoixSupprimerFournisseur
-                   display Ligne-DemandeSuppression
-                   accept ChoixSupprimerFournisseur line 5 col 62 reverse-video
+                   display Ligne-DemandeSuppressionFournisseur
+                   accept ChoixSupprimerFournisseur line 5 col 65 reverse-video
 
                    if ChoixSupprimerFournisseur = "O" or ChoixSupprimerFournisseur = "o"
                        exec sql
@@ -2277,7 +2291,7 @@
 
            if (sqlcode not equal 0 and SQLCODE not equal 1) then
                move 1 to EOCA
-               display Ligne-SelectionFournisseur
+               display Ligne-SelectionArticle
                accept ChoixEcranArticle line 5 col 77
            else
                perform AffichageChoixArticle
