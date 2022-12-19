@@ -2120,9 +2120,9 @@
            inspect date_commande of Commande tallying tally-counter for all '/'.
 
            if (code_fournisseur of Commande equal low-value
-                                                           or no_commande of Commande equal low-value
-                                                                                                     or date_commande of Commande equal low-value
-                                                                                                                                                 or tally-counter not equal 2
+              or no_commande of Commande equal low-value
+              or date_commande of Commande equal low-value
+              or tally-counter not equal 2
              )
                move "Entete du fichier non conforme" to MessageErreurCommande
                move 1 to EOR
@@ -2148,9 +2148,9 @@
            perform UnstringEnregistrementCommande.
 
            if (code_article of Commande equal low-value
-                                                       or code_article of Commande equal zero
-                                                       or quantite of Commande equal low-value
-                                                                                              or quantite of Commande equal zero
+              or code_article of Commande equal zero
+              or quantite of Commande equal low-value
+              or quantite of Commande equal zero
              )
                move "Corps du fichier non conforme" to MessageErreurCommande
                move 1 to EOR
@@ -2244,43 +2244,43 @@
       *    On averti l'utilisateur si l'article n'a pas été trouvé
            if (code_article of Article equal zero)
                move "Cependant certains articles n'ont pas pu etre rajoutes" to MessageErreurCommande
-           end-if.
+           else
+      *        MAJ quantite et stock article
+               add quantite of commande to quantite_stock of article
+               exec sql
+                   UPDATE article
+                       SET quantite_stock = :article.quantite_stock,
+                           date_modif = getdate()
+                           WHERE code_article = :commande.code_article AND id_fournisseur = :CodeFournisseur
+               end-exec
+      *        Insertion commande article
+               exec sql
+                   INSERT INTO ligne_commande (id_commande, code_article, quantite)
+                       VALUES (
+                           :commande.no_commande,
+                           :article.code_article,
+                           :commande.quantite
+                           )
+               end-exec
 
-      *    MAJ quantite et stock article
-           add quantite of commande to quantite_stock of article.
-           exec sql
-               UPDATE article
-                   SET quantite_stock = :article.quantite_stock,
-                       date_modif = getdate()
-                       WHERE code_article = :commande.code_article AND id_fournisseur = :CodeFournisseur
-           end-exec.
-      *    Insertion commande article
-           exec sql
-               INSERT INTO ligne_commande (id_commande, code_article, quantite)
-                   VALUES (
-                       :commande.no_commande,
-                       :article.code_article,
-                       :commande.quantite
-                       )
-           end-exec.
+      *        Ecriture etat stock
+               move code_article of article to code_article of CorpsFichierEtatStock
+               move libelle of article to libelle of CorpsFichierEtatStock
+               move quantite_stock of article to quantite_stock of CorpsFichierEtatStock
+               move quantite_min of article to quantite_min of CorpsFichierEtatStock
+
+               write e-fichierEtatStock from CorpsFichierEtatStock
+               add 1 to nbLigneEtatStock
+
+      *        ecriture pied de page nouvelle page
+               if nbLigneEtatStock equal MaxLigneEtatStock
+                   add 1 to noPageEtatStock
+                   move noPageEtatStock to NbPage of PiedDePageFichierEtatStock
+                   write e-fichierEtatStock from PiedDePageFichierEtatStock
+                   move 0 to nbLigneEtatStock
+               end-if
+           end-if.
            add 1 to NoLigneCommande.
-
-      *    Ecriture etat stock
-           move code_article of article to code_article of CorpsFichierEtatStock.
-           move libelle of article to libelle of CorpsFichierEtatStock.
-           move quantite_stock of article to quantite_stock of CorpsFichierEtatStock.
-           move quantite_min of article to quantite_min of CorpsFichierEtatStock.
-
-           write e-fichierEtatStock from CorpsFichierEtatStock.
-           add 1 to nbLigneEtatStock.
-
-      *    ecriture pied de page nouvelle page
-           if nbLigneEtatStock equal MaxLigneEtatStock
-               add 1 to noPageEtatStock
-               move noPageEtatStock to NbPage of PiedDePageFichierEtatStock
-               write e-fichierEtatStock from PiedDePageFichierEtatStock
-               move 0 to nbLigneEtatStock
-           end-if.
 
        TraitementCommande-fin.
            perform CloseInput.
