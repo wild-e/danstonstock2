@@ -12,13 +12,13 @@
            organization is line sequential.
            select f-fichierCommande4 assign to "C:\Emma\DUGS\fichierCommande4.csv"
            organization is line sequential.
+           select f-fichierCommande5 assign to "C:\Emma\DUGS\fichierCommande5.csv"
+           organization is line sequential.
 
            select f-fichierEtatStock assign to "C:\Emma\DUGS\fichierEtatStock.txt"
            organization is line sequential.
            select f-fichierCommandeStockBas assign to "C:\Emma\DUGS\fichierCommandeStockBas.txt"
            organization is line sequential.
-
-
 
        data division.
 
@@ -31,12 +31,13 @@
        01 e-fichierCommande3 pic x(255).
        fd f-fichierCommande4 record varying from 0 to 255.
        01 e-fichierCommande4 pic x(255).
+       fd f-fichierCommande5 record varying from 0 to 255.
+       01 e-fichierCommande5 pic x(255).
 
        fd f-fichierEtatStock record varying from 0 to 255.
        01 e-fichierEtatStock pic x(255).
        fd f-fichierCommandeStockBas record varying from 0 to 255.
        01 e-fichierCommandeStockBas pic x(255).
-
 
        working-storage section.
 
@@ -55,7 +56,7 @@
       ************************************************************
       * Variables
       ************************************************************
-              
+
        77 ChoixMenuPrincipal pic X.
        77 ChoixMenuArticle pic X.
        77 ChoixMenuFournisseur pic X.
@@ -97,9 +98,9 @@
        01 Fournisseur.
          10 id_fournisseur pic 9(5).
          10 raison_sociale sql char-varying (50).
-         10 siret sql char(14).
+         10 siret sql char (14).
          10 adresse sql char-varying (50).
-         10 cp sql char(5).
+         10 cp sql char (5).
          10 ville sql char-varying (50).
          10 pays sql char-varying (50).
          10 tel sql char-varying (15).
@@ -107,18 +108,18 @@
          10 date_modif sql date.
 
        01 Commande.
-           10 code_fournisseur sql char (10).
-           10 no_commande sql char (10).
-           10 date_commande pic x(8).
-           10 code_article pic 9(10).
-           10 quantite pic 9(10).
+         10 code_fournisseur sql char (10).
+         10 no_commande sql char (10).
+         10 date_commande pic x(8).
+         10 code_article pic 9(10).
+         10 quantite pic 9(10).
 
        77 CodeFournisseur pic x(9).
        77 QuantiteTotalCommande pic 9(6).
        77 NoLigneCommande pic 9(10).
        77 TotalLigneCommande pic 9(10).
        77 Choix pic x.
-       
+
        01 DetailArticleInput.
          10 code_article pic 9(5).
          10 id_fournisseur pic 9(5).
@@ -138,7 +139,6 @@
          10 quantite_mediane pic 9(5).
          10 raison_sociale sql char-varying (50).
 
-
        01 ModifArticleInput.
          10 id_fournisseur pic 9(5).
          10 raison_sociale sql char-varying (50).
@@ -147,7 +147,6 @@
          10 quantite_min pic 9(5).
          10 quantite_mediane pic 9(5).
 
-
        01 SuppArticleInput.
          10 id_fournisseur pic 9(5).
          10 raison_sociale sql char-varying (50).
@@ -155,7 +154,6 @@
          10 quantite_stock pic 9(5).
          10 quantite_min pic 9(5).
          10 quantite_mediane pic 9(5).
-
 
        01 ArticleRecupere.
          10 code_article pic 9(5).
@@ -167,7 +165,7 @@
          10 date_crea sql date.
          10 date_modif sql date.
          10 raison_sociale sql char-varying (50).
-       
+
        01 DetailFournisseurInput.
          10 raison_sociale sql char-varying (50).
          10 siret sql char (14).
@@ -207,7 +205,7 @@
          10 ville sql char-varying (50).
          10 pays sql char-varying (50).
          10 tel sql char-varying (15).
-        
+
        01 FournisseurRecupere.
          10 id_fournisseur pic 9(5).
          10 raison_sociale sql char-varying (50).
@@ -233,7 +231,7 @@
          10 Mois pic 99.
          10 filler value "/".
          10 Jour pic 99.
-       
+
        01 FournisseurDateCreationAffichage.
          10 Annee pic 9999.
          10 filler value "/".
@@ -249,10 +247,10 @@
          10 Jour pic 99.
 
        01 EcranArticleInput.
-           10 Ecran-QuantiteStock pic 9(5).
-           10 Ecran-QuantiteMin pic 9(5).
-           10 Ecran-QuantiteMed pic 9(5).
-           10 FournisseurChoisi pic X(50).
+         10 Ecran-QuantiteStock pic 9(5).
+         10 Ecran-QuantiteMin pic 9(5).
+         10 Ecran-QuantiteMed pic 9(5).
+         10 FournisseurChoisi pic X(50).
 
        77 IdModifArticle pic 9(5).
        77 IdSuppArticle pic 9(5).
@@ -367,14 +365,13 @@
 
        77 totalReapprovisionnement pic 9(5).
        77 CodeFournisseurPrecedent pic X(5).
-       77 testPagi pic 9.
 
        01 VueReapproArticleFournisseur.
          10 code_article pic 9(5).
          10 libelle pic x(50).
          10 quantite_stock pic 9(5).
          10 quantite_mediane pic 9(5).
-         10 code_fournisseur  pic x(5).
+         10 code_fournisseur pic x(5).
          10 raison_sociale pic x(50).
          10 adresse pic x(50).
          10 cp pic x(5).
@@ -394,7 +391,7 @@
            10 ville pic X(50).
          05 ligne4.
            10 filler pic X(36).
-           10 filler pic X(33) VALUE "Réapprovisionnement stock - page".
+           10 filler pic X(33) VALUE "Reapprovisionnement stock - page".
            10 filler pic x.
            10 NbPage pic Z9.
          05 Ligne5 pic X.
@@ -411,11 +408,11 @@
          05 Ligne8 pic X(111) VALUE ALL "-".
          05 Ligne9.
            10 filler pic X.
-           10 filler pic X(11) VALUE "Référence".
+           10 filler pic X(11) VALUE "Reference".
            10 filler pic X(5).
-           10 filler pic X(12) VALUE "Désignation".
+           10 filler pic X(12) VALUE "Designation".
            10 filler pic X(45).
-           10 filler pic X(10) VALUE "Quantités".
+           10 filler pic X(10) VALUE "Quantites".
            10 filler pic X(5).
            10 filler pic X(15) VALUE "Conditionnement".
          05 Ligne10 pic X(111) VALUE ALL "-".
@@ -429,7 +426,7 @@
            10 filler pic x(6).
            10 quantite pic x(5).
          05 filler pic x(9).
-         05 filler pic x(7) value "unités".
+         05 filler pic x(7) value "unites".
 
        01 PiedDePageFichierReapprovisionnementStock.
          10 filler pic X(4) VALUE ALL "-".
@@ -454,7 +451,6 @@
          10 filler pic X(82) VALUE ALL "-".
 
        01 LigneVide pic x(111) value all space.
-
 
       ************************************************************
       * Parametrage couleur �cran
@@ -524,19 +520,23 @@
          10 line 3 col 32 value " Ajout des commandes ".
          10 line 5 col 68 value "Choix: ".
          10 line 5 col 77 pic 9 from Choix.
-         10 line 12 col 15 value "1. Commande A - total article non conforme".
+         10 line 12 col 15 value "1. Commande A - Total article non conforme".
          10 line 13 col 15 value "2. Commande B - Mise en forme non conforme".
-         10 line 14 col 15 value "3. Commande C - fichier correct".
-         10 line 15 col 15 value "4. Commande D - fournisseur inconnu".
-         10 line 17 col 15 VALUE "0. Quitter".
+         10 line 14 col 15 value "3. Commande C - Fichier correct".
+         10 line 15 col 15 value "4. Commande D - Fournisseur inconnu".
+         10 line 16 col 15 value "5. Commande E - Article(s) non trouve(s)".
+         10 line 18 col 15 VALUE "0. Quitter".
 
        01 ligne-MenuCommandeErreur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 6 col 7 VALUE "Le programme s'est arrete sans modifier la base de donnees car:" reverse-video.
          10 line 7 col 7 pic x(80) from MessageErreurCommande.
+         10 line 9 col 7 VALUE "- Appuyez sur entree pour continuer".
          10 line 17 col 15 value "          ".
 
        01 ligne-MenuCommandeSucces background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 6 col 7 VALUE "Commande ajoutee avec succes" reverse-video.
+         10 line 7 col 7 pic x(80) from MessageErreurCommande.
+         10 line 9 col 7 VALUE "- Appuyez sur entree pour continuer".
          10 line 17 col 15 value "          ".
 
        01 ligne-MenuReapprovisionnement background-color is CouleurFondEcran foreground-color is CouleurCaractere.
@@ -571,38 +571,38 @@
          10 line 13 col 35 pic XX from Mois of ArticleDateModifAffichage.
          10 line 13 col 37 pic X value "/".
          10 line 13 col 38 pic XXXX from Annee of ArticleDateModifAffichage.
-     
+
       *************************************************************
       *   AJOUT ARTICLE
       *************************************************************
 
        01 ecran-AjoutArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
-           10 line 1 col 1 blank screen.
-           10 line 3 col 32 value "AJOUTER UN ARTICLE".
-           10 line 6 col 15 value "Libelle ...... : ".
-           10 line 6 col 32 pic x(15) using libelle of AjoutArticleInput.
-           10 line 7 col 15 value "Stock ........ : ".
-           10 line 7 col 32 pic ZZZ99 using Ecran-QuantiteStock.
-           10 line 8 col 15 value "Stock min .... : ".
-           10 line 8 col 32 pic ZZZ99 using Ecran-QuantiteMin.
-           10 line 9 col 15 value "Stock median . : ".
-           10 line 9 col 32 pic ZZZ99 using Ecran-QuantiteMed.
-           10 line 10 col 15 value "Fournisseur .. : ".
-           10 line 10 col 32 using raison_sociale of AjoutArticleInput.
-    
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "AJOUTER UN ARTICLE".
+         10 line 6 col 15 value "Libelle ...... : ".
+         10 line 6 col 32 pic x(15) using libelle of AjoutArticleInput.
+         10 line 7 col 15 value "Stock ........ : ".
+         10 line 7 col 32 pic ZZZ99 using Ecran-QuantiteStock.
+         10 line 8 col 15 value "Stock min .... : ".
+         10 line 8 col 32 pic ZZZ99 using Ecran-QuantiteMin.
+         10 line 9 col 15 value "Stock median . : ".
+         10 line 9 col 32 pic ZZZ99 using Ecran-QuantiteMed.
+         10 line 10 col 15 value "Fournisseur .. : ".
+         10 line 10 col 32 using raison_sociale of AjoutArticleInput.
+
        01 ecran-ChoixFournisseur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
-           10 line 1 col 1 blank screen.
-           10 line 3 col 32 value "CHOIX DU FOURNISSEUR".
-           10 line 5 col 68 value "Choix :".
-           10 line 5 col 77 pic 99 from ChoixEcranFournisseur.
-           10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "CHOIX DU FOURNISSEUR".
+         10 line 5 col 68 value "Choix :".
+         10 line 5 col 77 pic 99 from ChoixEcranFournisseur.
+         10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
 
        01 ecran-ChoixArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
-           10 line 1 col 1 blank screen.
-           10 line 3 col 32 value "CHOIX DE L ARTICLE".
-           10 line 5 col 68 value "Choix :".
-           10 line 5 col 77 pic 9 from ChoixEcranArticle.
-           10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
+         10 line 1 col 1 blank screen.
+         10 line 3 col 32 value "CHOIX DE L ARTICLE".
+         10 line 5 col 68 value "Choix :".
+         10 line 5 col 77 pic 9 from ChoixEcranArticle.
+         10 line 7 col 1 reverse-video pic X(80) VALUE "     Ref      Nom".
 
        01 LigneChoixArticle.
          05 line NoLigneChoixArticle Col 3 pic ZZZ99 from code_article of Article.
@@ -614,7 +614,7 @@
       *************************************************************
       *   MODIFICATION ARTICLE
       *************************************************************
-       
+
        01 ecran-ModifArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "MODIFIER UN ARTICLE".
@@ -632,7 +632,7 @@
       *************************************************************
       *   SUPPRESSION ARTICLE
       *************************************************************
-       
+
        01 ecran-SuppArticle background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 1 col 1 blank screen.
          10 line 3 col 32 value "SUPPRIMER UN ARTICLE".
@@ -658,10 +658,10 @@
          10 line 5 col 10 value "Selectionnez l article (00 pour quitter)".
 
        01 Ligne-ArticleAjoute background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-           10 line 5 col 1 pic x(80) value "                      Article Ajoute".
-       
+         10 line 5 col 1 pic x(80) value "                      Article Ajoute".
+
        01 Ligne-ArticleModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
-           10 line 5 col 1 pic x(80) value "                      Article Modifie".
+         10 line 5 col 1 pic x(80) value "                      Article Modifie".
 
        01 Ligne-ChoixArticleModifie background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 20 value "[M]odifier - [R]evenir : ".
@@ -683,7 +683,7 @@
 
        01 Ligne-ArticleSupprime background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 15 value "L article a bien ete supprime.".
-       
+
       **************************************************************
       *      DETAILS FOURNISSEUR
       **************************************************************
@@ -783,7 +783,7 @@
          10 line 11 col 32 using pays of SuppFournisseurInput.
          10 line 12 col 15 value "No Tel ....... : ".
          10 line 12 col 32 using tel of SuppFournisseurInput.
-         
+
       ************ Lignes d'affichage Fournisseur ***************
        01 Ligne-ChoixDetailFournisseur background-color is CouleurCaractere foreground-color is CouleurFondEcran.
          10 line 5 col 10 value "[R]evenir - [M]odifier - [S]pprimer : ".
@@ -831,7 +831,6 @@
        01 Ligne-AlerteErreurBDD reverse-video.
          10 line 5 col 32 value "Erreur Base de donnees".
 
-      
        procedure division.
 
       *************************************************************
@@ -913,9 +912,8 @@
 
            end-evaluate.
        MenuArticle-fin.
-          continue.
-                    
-             
+           continue.
+
        ListeArticle.
            perform DetailArticle-init.
            perform DetailArticle-trt until EOF = 1.
@@ -942,7 +940,7 @@
                move date_modif of ArticleRecupere to ArticleDateModifAffichage
                perform AffichageDetailArticle
            end-if.
-          
+
        DetailArticle-fin.
            continue.
        AffichageDetailArticle.
@@ -989,7 +987,7 @@
            else
                display ecran-AjoutArticle
                accept libelle of AjoutArticleInput line 6 col 32 prompt
-               
+
       *    On verifie que le champ obligatoire est rempli
                if libelle of AjoutArticleInput not equal ' '
       *    On verifie si l 'article est deja dans la base de donnees
@@ -1064,7 +1062,7 @@
                        initialize ChoixEcranFournisseur
                        initialize raison_sociale of AjoutArticleInput
                    end-if
-                                      
+
                else
       *    On signale que le champ est obligatoire on propose de quitte le menu ajout
                    move "Q" to ChoixChampObligatoire
@@ -1077,7 +1075,6 @@
                    end-if
                end-if
            end-if.
-     
 
        AjoutArticle-fin.
            initialize AjoutArticleInput EcranArticleInput.
@@ -1150,7 +1147,7 @@
 
                    accept libelle of ModifArticleInput line 6 col 32 prompt
                    if libelle of ModifArticleInput not equal ' '
-                  
+
                        accept quantite_stock of ModifArticleInput line 7 col 32 prompt
                        accept quantite_min of ModifArticleInput line 8 col 32 prompt
                        accept quantite_mediane of ModifArticleInput line 9 col 32 prompt
@@ -1165,7 +1162,7 @@
                            move id_fournisseur of FournisseurRecupere to id_fournisseur of ModifArticleInput
                        else
                            move raison_sociale of ModifArticleInput to RaisonSocialeFournisseurRecherche
-                           perform RechercheFournisseurParNom 
+                           perform RechercheFournisseurParNom
                            initialize RaisonSocialeFournisseurRecherche
                        end-if
                        if raison_sociale of ModifArticleInput <> raison_sociale of FournisseurRecupere
@@ -1230,7 +1227,7 @@
                                end-exec
                                display id_fournisseur of ModifArticleInput
                                perform ModifArticleBDD
-                            else
+                           else
                                move "Q" to ChoixChampObligatoire
                                display Ligne-ChampObligatoire
                                accept ChoixChampObligatoire line 5 col 59 reverse-video
@@ -1341,7 +1338,7 @@
                        display EffaceLigne5
                        display Ligne-ArticleSupprime
                        accept Pause line 1 col 1
-                    else
+                   else
                        display Ligne-AlerteStock
                        accept Pause line 1 col 1
                    end-if
@@ -1353,7 +1350,6 @@
            end-if.
        SuppArticle-fin.
            initialize ArticleRecupere.
-      
 
       *************************************************************
       *************************************************************
@@ -1427,9 +1423,9 @@
       *************************************************************
 
        EcritureFichierReapprovisionnement.
-      *    On change de page à chaque nouveau fournisseur 
+      *    On change de page à chaque nouveau fournisseur
            if CodeFournisseurPrecedent not equal code_fournisseur of VueReapproArticleFournisseur
-           and CodeFournisseurPrecedent not equal space
+             and CodeFournisseurPrecedent not equal space
                perform EcritureFichierReapprovisionnement-piedDePageFin
                perform SautDePageNouveauFournisseur until nbLigneReapprovisionnement equal MaxLigneReapprovisionnement
                move 0 to nbLigneReapprovisionnement
@@ -1443,7 +1439,7 @@
 
       *    On écrit les lignes d'articles quoi qu'il arrive
            perform EcritureFichierReapprovisionnement-corps
-           
+
       *    Pagination
            if nbLigneReapprovisionnement equal MaxLigneReapprovisionnement
                perform EcritureFichierReapprovisionnement-piedDePageNouvellePage
@@ -1485,7 +1481,6 @@
 
            write e-fichierCommandeStockBas from CorpsFichierReapprovisionnementStock.
            add 1 to nbLigneReapprovisionnement.
-           add 1 to testPagi.
 
        EcritureFichierReapprovisionnement-piedDePageFin.
            add 1 to nbLigneReapprovisionnement.
@@ -1583,7 +1578,7 @@
            move 0 to EOAF.
            initialize AjoutFournisseurInput.
        AjoutFournisseur-trt.
-           
+
            display ecran-AjoutFournisseur.
 
            if ChoixAjoutFournisseur = "a" or ChoixAjoutFournisseur = "A"
@@ -1608,7 +1603,7 @@
                    initialize ChoixAjoutFournisseur
                    accept Pause
                end-if
-               
+
            else
                display ecran-AjoutFournisseur
                accept raison_sociale of AjoutFournisseurInput line 6 col 32 prompt
@@ -1705,7 +1700,7 @@
                    accept ville of ModifFournisseurInput line 10 col 32 prompt
                    accept pays of ModifFournisseurInput line 11 col 32 prompt
                    accept tel of ModifFournisseurInput line 12 col 32 prompt
-                   if  raison_sociale of ModifFournisseurInput = ' '
+                   if raison_sociale of ModifFournisseurInput = ' '
                        display Ligne-ChampRaisonSocialeObligatoire
                        accept Pause
                    else
@@ -1753,15 +1748,15 @@
        ModifFournisseur-fin.
            initialize FournisseurRecupere.
            initialize ModifFournisseurInput.
-       
+
        ModifFournisseurBDD.
-           if raison_sociale of FournisseurRecupere <> raison_sociale of ModifFournisseurInput 
-           or siret of FournisseurRecupere <> siret of ModifFournisseurInput
-           or adresse of FournisseurRecupere <> adresse of ModifFournisseurInput
-           or cp of FournisseurRecupere <> cp of ModifFournisseurInput
-           or ville of FournisseurRecupere <> ville of ModifFournisseurInput
-           or pays of FournisseurRecupere <> pays of ModifFournisseurInput
-           or tel of FournisseurRecupere <> tel of ModifFournisseurInput then
+           if raison_sociale of FournisseurRecupere <> raison_sociale of ModifFournisseurInput
+             or siret of FournisseurRecupere <> siret of ModifFournisseurInput
+             or adresse of FournisseurRecupere <> adresse of ModifFournisseurInput
+             or cp of FournisseurRecupere <> cp of ModifFournisseurInput
+             or ville of FournisseurRecupere <> ville of ModifFournisseurInput
+             or pays of FournisseurRecupere <> pays of ModifFournisseurInput
+             or tel of FournisseurRecupere <> tel of ModifFournisseurInput then
                move "M" to ChoixModifFournisseur
                display EffaceLigne5
                display Ligne-ChoixFournisseurModifie
@@ -1780,7 +1775,7 @@
                        WHERE
                            id_Fournisseur = :FournisseurRecupere.id_Fournisseur
                    end-exec
-               
+
                    if sqlcode equal 0
                        move 1 to EOM
                        display Ligne-FournisseurModifie
@@ -1821,8 +1816,6 @@
                    initialize IdFournisseurRecherche
                end-if
            end-if.
-
-
 
            if ChoixEcranFournisseur <> 0 or raison_sociale of FournisseurRecupere <> ' ' or raison_sociale of SuppFournisseurInput <> ' '
                exec sql
@@ -1871,7 +1864,7 @@
                    accept Pause
                end-if
            else
-              continue
+               continue
            end-if.
        SuppFournisseur-fin.
            initialize FournisseurRecupere.
@@ -1905,7 +1898,6 @@
            move 1 to ChoixMenuCommande.
 
        MenuCommande-trt.
-           move 0 to ChoixMenuCommande.
            move 0 to ChoixNoCommande
            display ecran-MenuCommande.
            accept ChoixNoCommande line 5 col 77.
@@ -1916,7 +1908,7 @@
                when other
                    perform TraitementFichierCommande
            end-evaluate.
-      
+
        MenuCommande-fin.
            continue.
 
@@ -1935,6 +1927,8 @@
                    open input f-fichierCommande3
                when 4
                    open input f-fichierCommande4
+               when 5
+                   open input f-fichierCommande5
 
            end-evaluate.
 
@@ -1948,6 +1942,9 @@
                    read f-fichierCommande3
                when 4
                    read f-fichierCommande4
+               when 5
+                   read f-fichierCommande5
+
            end-evaluate.
 
        ReadFichierToEnd.
@@ -1975,6 +1972,13 @@
                    end-read
                when 4
                    read f-fichierCommande4
+                       at end
+                           perform VerificationFichier-derniereLigne
+                       not at end
+                           perform VerificationFichier-corps
+                   end-read
+               when 5
+                   read f-fichierCommande5
                        at end
                            perform VerificationFichier-derniereLigne
                        not at end
@@ -2013,8 +2017,15 @@
                      no_commande of Commande
                      date_commande of Commande
                    end-unstring
-           end-evaluate.
+               when 5
+                   unstring e-fichierCommande5 delimited by ","
+                     into
+                     code_fournisseur of Commande
+                     no_commande of Commande
+                     date_commande of Commande
+                   end-unstring
 
+           end-evaluate.
 
        CloseInput.
            evaluate ChoixNoCommande
@@ -2026,6 +2037,8 @@
                    close f-fichierCommande3
                when 4
                    close f-fichierCommande4
+               when 5
+                   close f-fichierCommande5
 
            end-evaluate.
 
@@ -2055,6 +2068,12 @@
                      code_article of Commande
                      quantite of Commande
                    end-unstring
+               when 5
+                   unstring e-fichierCommande5 delimited by ","
+                     into
+                     code_article of Commande
+                     quantite of Commande
+                   end-unstring
 
            end-evaluate.
 
@@ -2074,7 +2093,7 @@
 
        SortieErreurCommande.
            display ligne-MenuCommandeErreur.
-           accept ChoixNoCommande line 5 col 77.
+           accept Pause line 5 col 77.
 
        VerificationFichier.
            perform VerificationFichier-init.
@@ -2082,10 +2101,14 @@
            perform VerificationFichier-fin.
 
        VerificationFichier-init.
-           move space to MessageErreurCommande
+           move space to MessageErreurCommande.
            move 0 to EOR.
            move 0 to NoligneCommande.
            move 0 to QuantiteTotalCommande.
+           move spaces to Commande.
+           move 0 to QuantiteTotalCommande.
+           move 0 to TotalLigneCommande.
+           move 0 to tally-counter.
            perform openInput.
            perform VerificationEntete.
 
@@ -2097,10 +2120,10 @@
            inspect date_commande of Commande tallying tally-counter for all '/'.
 
            if (code_fournisseur of Commande equal low-value
-               or no_commande of Commande equal low-value
-               or date_commande of Commande equal low-value
-               or tally-counter not equal 2
-               )
+                                                           or no_commande of Commande equal low-value
+                                                                                                     or date_commande of Commande equal low-value
+                                                                                                                                                 or tally-counter not equal 2
+             )
                move "Entete du fichier non conforme" to MessageErreurCommande
                move 1 to EOR
            end-if.
@@ -2125,13 +2148,14 @@
            perform UnstringEnregistrementCommande.
 
            if (code_article of Commande equal low-value
-               or code_article of Commande equal zero
-               or quantite of Commande equal low-value
-               or quantite of Commande equal zero
-               )
+                                                       or code_article of Commande equal zero
+                                                       or quantite of Commande equal low-value
+                                                                                              or quantite of Commande equal zero
+             )
                move "Corps du fichier non conforme" to MessageErreurCommande
                move 1 to EOR
            end-if.
+
            add quantite of Commande to QuantiteTotalCommande.
 
        VerificationFichier-derniereLigne.
@@ -2216,6 +2240,12 @@
                    from article
                    WHERE code_article = :commande.code_article AND id_fournisseur = :CodeFournisseur
            end-exec.
+
+      *    On averti l'utilisateur si l'article n'a pas été trouvé
+           if (code_article of Article equal zero)
+               move "Cependant certains articles n'ont pas pu etre rajoutes" to MessageErreurCommande
+           end-if.
+
       *    MAJ quantite et stock article
            add quantite of commande to quantite_stock of article.
            exec sql
@@ -2251,7 +2281,6 @@
                write e-fichierEtatStock from PiedDePageFichierEtatStock
                move 0 to nbLigneEtatStock
            end-if.
-
 
        TraitementCommande-fin.
            perform CloseInput.
@@ -2318,13 +2347,13 @@
                    move 7 to NoLigneChoixArticle
                end-if
            end-if.
-           
+
       *************************************************************
       *************************************************************
       * CHOIX FOURNISSEUR
       *************************************************************
       *************************************************************
-           
+
        ChoixDuFournisseur.
            perform ChoixFournisseur-init.
            perform ChoixFournisseur-trt until EOCF = 1.
@@ -2353,7 +2382,7 @@
                move 1 to EOCF
                display Ligne-SelectionFournisseur
                accept ChoixEcranFournisseur line 5 col 77
-              
+
            else
 
                perform AffichageChoixFournisseur
@@ -2381,7 +2410,7 @@
                    move 7 to NoLigneChoixFournisseur
                end-if
 
-            end-if.
+           end-if.
 
       **************************************************************
       **************************************************************
@@ -2466,10 +2495,5 @@
               FROM Fournisseur
               WHERE id_fournisseur = :IdFournisseurRecherche
           end-exec.
-
-
-
-
-
 
        end program Program1.
