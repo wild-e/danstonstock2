@@ -12,6 +12,9 @@
            organization is line sequential.
            select f-fichierCommande4 assign to "C:\Emma\DUGS\fichierCommande4.csv"
            organization is line sequential.
+           select f-fichierCommande5 assign to "C:\Emma\DUGS\fichierCommande5.csv"
+           organization is line sequential.
+
 
            select f-fichierEtatStock assign to "C:\Emma\DUGS\fichierEtatStock.txt"
            organization is line sequential.
@@ -31,6 +34,9 @@
        01 e-fichierCommande3 pic x(255).
        fd f-fichierCommande4 record varying from 0 to 255.
        01 e-fichierCommande4 pic x(255).
+       fd f-fichierCommande5 record varying from 0 to 255.
+       01 e-fichierCommande5 pic x(255).
+
 
        fd f-fichierEtatStock record varying from 0 to 255.
        01 e-fichierEtatStock pic x(255).
@@ -367,7 +373,6 @@
 
        77 totalReapprovisionnement pic 9(5).
        77 CodeFournisseurPrecedent pic X(5).
-       77 testPagi pic 9.
 
        01 VueReapproArticleFournisseur.
          10 code_article pic 9(5).
@@ -394,7 +399,7 @@
            10 ville pic X(50).
          05 ligne4.
            10 filler pic X(36).
-           10 filler pic X(33) VALUE "Réapprovisionnement stock - page".
+           10 filler pic X(33) VALUE "Reapprovisionnement stock - page".
            10 filler pic x.
            10 NbPage pic Z9.
          05 Ligne5 pic X.
@@ -411,11 +416,11 @@
          05 Ligne8 pic X(111) VALUE ALL "-".
          05 Ligne9.
            10 filler pic X.
-           10 filler pic X(11) VALUE "Référence".
+           10 filler pic X(11) VALUE "Reference".
            10 filler pic X(5).
-           10 filler pic X(12) VALUE "Désignation".
+           10 filler pic X(12) VALUE "Designation".
            10 filler pic X(45).
-           10 filler pic X(10) VALUE "Quantités".
+           10 filler pic X(10) VALUE "Quantites".
            10 filler pic X(5).
            10 filler pic X(15) VALUE "Conditionnement".
          05 Ligne10 pic X(111) VALUE ALL "-".
@@ -429,7 +434,7 @@
            10 filler pic x(6).
            10 quantite pic x(5).
          05 filler pic x(9).
-         05 filler pic x(7) value "unités".
+         05 filler pic x(7) value "unites".
 
        01 PiedDePageFichierReapprovisionnementStock.
          10 filler pic X(4) VALUE ALL "-".
@@ -524,19 +529,23 @@
          10 line 3 col 32 value " Ajout des commandes ".
          10 line 5 col 68 value "Choix: ".
          10 line 5 col 77 pic 9 from Choix.
-         10 line 12 col 15 value "1. Commande A - total article non conforme".
+         10 line 12 col 15 value "1. Commande A - Total article non conforme".
          10 line 13 col 15 value "2. Commande B - Mise en forme non conforme".
-         10 line 14 col 15 value "3. Commande C - fichier correct".
-         10 line 15 col 15 value "4. Commande D - fournisseur inconnu".
-         10 line 17 col 15 VALUE "0. Quitter".
+         10 line 14 col 15 value "3. Commande C - Fichier correct".
+         10 line 15 col 15 value "4. Commande D - Fournisseur inconnu".
+         10 line 16 col 15 value "5. Commande E - Article(s) non trouve(s)".
+         10 line 18 col 15 VALUE "0. Quitter".
 
        01 ligne-MenuCommandeErreur background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 6 col 7 VALUE "Le programme s'est arrete sans modifier la base de donnees car:" reverse-video.
          10 line 7 col 7 pic x(80) from MessageErreurCommande.
+         10 line 9 col 7 VALUE "- Appuyez sur entree pour continuer".
          10 line 17 col 15 value "          ".
 
        01 ligne-MenuCommandeSucces background-color is CouleurFondEcran foreground-color is CouleurCaractere.
          10 line 6 col 7 VALUE "Commande ajoutee avec succes" reverse-video.
+         10 line 7 col 7 pic x(80) from MessageErreurCommande.
+         10 line 9 col 7 VALUE "- Appuyez sur entree pour continuer".
          10 line 17 col 15 value "          ".
 
        01 ligne-MenuReapprovisionnement background-color is CouleurFondEcran foreground-color is CouleurCaractere.
@@ -1471,7 +1480,6 @@
 
            write e-fichierCommandeStockBas from CorpsFichierReapprovisionnementStock.
            add 1 to nbLigneReapprovisionnement.
-           add 1 to testPagi.
 
        EcritureFichierReapprovisionnement-piedDePageFin.
            add 1 to nbLigneReapprovisionnement.
@@ -1891,7 +1899,6 @@
            move 1 to ChoixMenuCommande.
 
        MenuCommande-trt.
-           move 0 to ChoixMenuCommande.
            move 0 to ChoixNoCommande
            display ecran-MenuCommande.
            accept ChoixNoCommande line 5 col 77.
@@ -1921,6 +1928,9 @@
                    open input f-fichierCommande3
                when 4
                    open input f-fichierCommande4
+               when 5
+                   open input f-fichierCommande5
+
 
            end-evaluate.
 
@@ -1934,6 +1944,9 @@
                    read f-fichierCommande3
                when 4
                    read f-fichierCommande4
+               when 5
+                   read f-fichierCommande5
+
            end-evaluate.
 
        ReadFichierToEnd.
@@ -1961,6 +1974,13 @@
                    end-read
                when 4
                    read f-fichierCommande4
+                       at end
+                           perform VerificationFichier-derniereLigne
+                       not at end
+                           perform VerificationFichier-corps
+                   end-read
+               when 5
+                   read f-fichierCommande5
                        at end
                            perform VerificationFichier-derniereLigne
                        not at end
@@ -1999,6 +2019,14 @@
                      no_commande of Commande
                      date_commande of Commande
                    end-unstring
+               when 5
+                   unstring e-fichierCommande5 delimited by ","
+                     into
+                     code_fournisseur of Commande
+                     no_commande of Commande
+                     date_commande of Commande
+                   end-unstring
+
            end-evaluate.
 
 
@@ -2012,6 +2040,9 @@
                    close f-fichierCommande3
                when 4
                    close f-fichierCommande4
+               when 5
+                   close f-fichierCommande5
+
 
            end-evaluate.
 
@@ -2041,6 +2072,12 @@
                      code_article of Commande
                      quantite of Commande
                    end-unstring
+               when 5
+                   unstring e-fichierCommande5 delimited by ","
+                     into
+                     code_article of Commande
+                     quantite of Commande
+                   end-unstring
 
            end-evaluate.
 
@@ -2060,7 +2097,7 @@
 
        SortieErreurCommande.
            display ligne-MenuCommandeErreur.
-           accept ChoixNoCommande line 5 col 77.
+           accept Pause line 5 col 77.
 
        VerificationFichier.
            perform VerificationFichier-init.
@@ -2068,10 +2105,14 @@
            perform VerificationFichier-fin.
 
        VerificationFichier-init.
-           move space to MessageErreurCommande
+           move space to MessageErreurCommande.
            move 0 to EOR.
            move 0 to NoligneCommande.
            move 0 to QuantiteTotalCommande.
+           move spaces to Commande.
+           move 0 to QuantiteTotalCommande.
+           move 0 to TotalLigneCommande.
+           move 0 to tally-counter.
            perform openInput.
            perform VerificationEntete.
 
@@ -2110,6 +2151,7 @@
       *    On vérifie que la ligne article est conforme
            perform UnstringEnregistrementCommande.
 
+
            if (code_article of Commande equal low-value
                or code_article of Commande equal zero
                or quantite of Commande equal low-value
@@ -2118,6 +2160,7 @@
                move "Corps du fichier non conforme" to MessageErreurCommande
                move 1 to EOR
            end-if.
+
            add quantite of Commande to QuantiteTotalCommande.
 
        VerificationFichier-derniereLigne.
@@ -2202,6 +2245,12 @@
                    from article
                    WHERE code_article = :commande.code_article AND id_fournisseur = :CodeFournisseur
            end-exec.
+
+      *    On averti l'utilisateur si l'article n'a pas été trouvé
+           if (code_article of Article equal zero)
+               move "Cependant certains articles n'ont pas pu etre rajoutes" to MessageErreurCommande
+           end-if.
+
       *    MAJ quantite et stock article
            add quantite of commande to quantite_stock of article.
            exec sql
